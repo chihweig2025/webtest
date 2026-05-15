@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Player - Main Frame & iFrame Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .title h1 {
+      font-size: 2.5rem;
+      color: #e94560;
+      margin-bottom: 10px;
+    }
+
+    .title p {
+      color: #a0a0a0;
+      font-size: 1.1rem;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-header {
+      background: linear-gradient(90deg, #e94560, #0f3460);
+      padding: 15px 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header .badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: normal;
+    }
+
+    .card-body {
+      padding: 20px;
+      background: #0f0f23;
+    }
+
+    .card-body video {
+      width: 100%;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    .card-body iframe {
+      width: 100%;
+      height: 350px;
+      border: none;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    .card-footer {
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #888;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .card-footer span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-footer span::before {
+      content: "✓";
+      color: #4ecca3;
+    }
+
+    .info-section {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-section h3 {
+      color: #e94560;
+      margin-bottom: 15px;
+    }
+
+    .info-section ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .info-section li {
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      color: #ccc;
+    }
+
+    .info-section li strong {
+      color: #4ecca3;
+    }
+
+    @media (max-width: 600px) {
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .title h1 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">
+    <h1>&#9654; Video Player Test</h1>
+    <p>Testing Video in Main Frame & iFrame Environment</p>
+  </div>
+
+  <div class="video-grid">
+    <!-- 主Frame中的Video -->
+    <div class="card">
+      <div class="card-header">
+        Main Frame Video
+        <span class="badge">Direct</span>
+      </div>
+      <div class="card-body">
+        <video controls preload="metadata" id="mainVideo" data-fullscreen-title="none">
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      <div class="card-footer">
+        <span>Supports MP4 / WebM / Ogg</span>
+        <span>Mobile Friendly</span>
+      </div>
+    </div>
+
+    <!-- iFrame中的Video -->
+    <div class="card">
+      <div class="card-header">
+        iFrame Video
+        <span class="badge">Embedded</span>
+      </div>
+      <div class="card-body">
+        <iframe
+                id="videoIframe"
+                srcdoc='
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                    background: #0f0f23;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    padding: 10px;
+                  }
+                  video {
+                    width: 100%;
+                    max-width: 100%;
+                    border-radius: 8px;
+                    background: #000;
+                  }
+                  .wrapper {
+                    width: 100%;
+                    text-align: center;
+                  }
+                  .label {
+                    color: #4ecca3;
+                    font-family: sans-serif;
+                    font-size: 12px;
+                    margin-bottom: 10px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="wrapper">
+                  <div class="label">▶ Playing inside iFrame</div>
+                  <video controls preload="metadata" id="iframeVideo" data-fullscreen-title="none">
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </body>
+              </html>
+            '
+                allow="autoplay; fullscreen"
+                allowfullscreen
+        ></iframe>
+      </div>
+      <div class="card-footer">
+        <span>Sandboxed Environment</span>
+        <span>Cross-Origin Ready</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 另一个iFrame示例：使用外部URL -->
+  <div class="video-grid" style="margin-top: 30px;">
+    <div class="card">
+      <div class="card-header">
+        iFrame with External Source
+        <span class="badge">External URL</span>
+      </div>
+      <div class="card-body">
+        <iframe
+                id="externalIframe"
+                src="about:blank"
+                allow="autoplay; fullscreen"
+                allowfullscreen
+        ></iframe>
+      </div>
+      <div class="card-footer">
+        <span>External Page Loading</span>
+        <span>Separate Document</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        Blob URL iFrame
+        <span class="badge">Dynamic</span>
+      </div>
+      <div class="card-body">
+        <iframe
+                id="blobIframe"
+                allow="autoplay; fullscreen"
+                allowfullscreen
+        ></iframe>
+      </div>
+      <div class="card-footer">
+        <span>Dynamically Created</span>
+        <span>JavaScript Generated</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h3>📋 Test Information</h3>
+    <ul>
+      <li><strong>Main Frame:</strong> Video directly in parent document</li>
+      <li><strong>iFrame (srcdoc):</strong> Using inline HTML via srcdoc attribute</li>
+      <li><strong>iFrame (external):</strong> Loading from external URL</li>
+      <li><strong>iFrame (blob):</strong> Dynamically created via JavaScript</li>
+      <li><strong>Video Source:</strong> W3Schools sample video (Big Buck Bunny)</li>
+      <li><strong>Features:</strong> Controls, Preload, Fullscreen Support</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // 为Blob URL iFrame动态创建内容
+  document.addEventListener('DOMContentLoaded', function() {
+    const blobIframe = document.getElementById('blobIframe');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            background: linear-gradient(135deg, #1a1a2e, #0f0f23);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 15px;
+          }
+          video {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+          }
+          .wrapper {
+            width: 100%;
+          }
+          .label {
+            color: #e94560;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="label">🎬 Blob URL iFrame Video</div>
+          <video data-fullscreen-title="none" controls preload="metadata">
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    blobIframe.src = blobUrl;
+
+    // 设置外部iFrame内容
+    const externalIframe = document.getElementById('externalIframe');
+    externalIframe.srcdoc = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            background: #16213e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 15px;
+          }
+          video {
+            width: 100%;
+            border-radius: 8px;
+          }
+          .wrapper { width: 100%; }
+          .label {
+            color: #fff;
+            font-family: sans-serif;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+            opacity: 0.7;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="label">📺 External Source Simulation</div>
+          <video controls data-fullscreen-title="none" preload="metadata">
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </body>
+      </html>
+    `;
+  });
+
+  // 打印测试信息到控制台
+  console.log('=== Video Test Page Loaded ===');
+  console.log('Main Frame Video:', document.getElementById('mainVideo'));
+
+  // 延迟访问iframe中的video元素
+  setTimeout(() => {
+    try {
+      const iframe = document.getElementById('videoIframe');
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      const iframeVideo = iframeDoc.querySelector('video');
+      console.log('iFrame Video:', iframeVideo);
+    } catch(e) {
+      console.log('Cannot access iFrame content (expected for cross-origin):', e.message);
+    }
+  }, 1000);
+</script>
+
+</body>
+</html>
