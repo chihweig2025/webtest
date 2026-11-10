@@ -1,0 +1,22 @@
+resources/speech_recognition_test.html
+  s_5572b89421303b::t_b5d068fbf23e0d 1-1108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "5.30.1",
+  "base_commit_sha": "91fa386deb68bd9ee7e90d75abb726187c2e7cbc",
+  "prompts": {},
+  "sessions": {
+    "s_5572b89421303b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e3c7b0acdffegjwD9keYHVzoIA",
+        "model": "glm-5.3"
+      },
+      "human_author": "gzweioh <gaozhiwei6@huawei.com>",
+      "total_additions": 0,
+      "total_deletions": 0,
+      "overridden_lines": 0
+    }
+  }
+}
