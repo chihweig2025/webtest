@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Speech API 语音识别测试</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            /* === Cyberpunk 配色方案 === */
+            --color-primary: #00ff9f;
+            --color-primary-hover: #00e08a;
+            --color-secondary: #00d4ff;
+            --color-secondary-hover: #00c4eb;
+            --color-accent: #ff6b35;
+            --color-accent-hover: #e55a2a;
+            --color-error: #ff4757;
+            --color-success: #00ff9f;
+            --color-warning: #ffb800;
+
+            /* === 中性色系 === */
+            --color-bg: #0a0e14;
+            --color-bg-elevated: #11161d;
+            --color-bg-card: #0d1118;
+            --color-bg-input: #080c11;
+
+            /* === 文字颜色 === */
+            --color-text-primary: #f0f6fc;
+            --color-text-secondary: #8b949e;
+            --color-text-tertiary: #6e7681;
+            --color-text-on-primary: #0a0e14;
+
+            /* === 边框颜色 === */
+            --color-border-default: #30363d;
+            --color-border-muted: #21262d;
+            --color-border-accent: rgba(0, 255, 159, 0.3);
+
+            /* === 8dp 间距系统 === */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+
+            /* === 字体 === */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+            /* === 文字大小 === */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 2rem;
+
+            /* === 动画 === */
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+            /* === 圆角 === */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+
+            /* === 阴影 === */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+            /* === 触摸目标 === */
+            --touch-target: 44px;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: var(--text-base);
+            line-height: 1.6;
+            color: var(--color-text-primary);
+            background-color: var(--color-bg);
+            min-height: 100vh;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-primary);
+            color: var(--color-text-on-primary);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 9999;
+            transition: top var(--duration-fast);
+        }
+
+        .skip-link:focus {
+            top: var(--space-4);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        @media (min-width: 640px) {
+            .container { padding: 0 var(--space-6); }
+        }
+
+        /* === Header === */
+        .page-header {
+            background: var(--color-bg-elevated);
+            border-bottom: 1px solid var(--color-border-muted);
+            padding: var(--space-8) 0;
+            margin-bottom: var(--space-8);
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-secondary);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .header-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--color-secondary);
+            box-shadow: 0 0 6px var(--color-secondary);
+        }
+
+        .page-title {
+            font-family: var(--font-mono);
+            font-size: var(--text-3xl);
+            font-weight: 600;
+            color: var(--color-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-3);
+        }
+
+        .page-description {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            max-width: 680px;
+        }
+
+        /* === Alert === */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .alert.info {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        .alert.warning {
+            background: rgba(255, 184, 0, 0.08);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+        }
+        .alert.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            width: 20px; height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .alert.info .alert-icon { color: var(--color-secondary); }
+        .alert.warning .alert-icon { color: var(--color-warning); }
+        .alert.error .alert-icon { color: var(--color-error); }
+
+        .alert-title {
+            font-weight: 600;
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-1);
+        }
+        .alert.info .alert-title { color: var(--color-secondary); }
+        .alert.warning .alert-title { color: var(--color-warning); }
+        .alert.error .alert-title { color: var(--color-error); }
+
+        .alert-message {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+        .alert-message code {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            background: rgba(255,255,255,0.06);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            color: var(--color-primary);
+        }
+
+        /* === Card === */
+        .card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-5);
+            gap: var(--space-3);
+        }
+
+        .card-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .card-title .num {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            border: 1px solid var(--color-border-default);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        /* === Status === */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .status-pill .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--color-text-tertiary);
+        }
+        .status-pill.listening .dot {
+            background: var(--color-primary);
+            animation: pulse 1.4s infinite;
+        }
+        .status-pill.listening { color: var(--color-primary); border-color: var(--color-border-accent); }
+        .status-pill.error .dot { background: var(--color-error); }
+        .status-pill.error { color: var(--color-error); border-color: rgba(255,71,87,0.3); }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,159,0.6); }
+            50% { box-shadow: 0 0 0 6px rgba(0,255,159,0); }
+        }
+
+        /* === Mic visual === */
+        .mic-visual {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 72px;
+            margin: var(--space-4) 0;
+        }
+        .mic-visual .bar {
+            width: 6px;
+            height: 12px;
+            background: var(--color-border-default);
+            border-radius: 3px;
+            transition: background var(--duration-fast), height var(--duration-fast);
+        }
+        .mic-visual.active .bar {
+            background: var(--color-primary);
+            box-shadow: 0 0 8px var(--color-primary);
+            animation: wave 1s ease-in-out infinite;
+        }
+        .mic-visual.active .bar:nth-child(1) { animation-delay: -0.9s; }
+        .mic-visual.active .bar:nth-child(2) { animation-delay: -0.7s; }
+        .mic-visual.active .bar:nth-child(3) { animation-delay: -0.5s; }
+        .mic-visual.active .bar:nth-child(4) { animation-delay: -0.3s; }
+        .mic-visual.active .bar:nth-child(5) { animation-delay: -0.1s; }
+        .mic-visual.active .bar:nth-child(6) { animation-delay: -0.3s; }
+        .mic-visual.active .bar:nth-child(7) { animation-delay: -0.5s; }
+        .mic-visual.active .bar:nth-child(8) { animation-delay: -0.7s; }
+        .mic-visual.active .bar:nth-child(9) { animation-delay: -0.9s; }
+        @keyframes wave {
+            0%, 100% { height: 12px; }
+            50% { height: 52px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .mic-visual.active .bar { animation: none; height: 28px; }
+            .status-pill.listening .dot { animation: none; }
+        }
+
+        /* === Form controls === */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+        .label {
+            font-size: var(--text-xs);
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .label .hint { color: var(--color-text-tertiary); text-transform: none; letter-spacing: 0; }
+
+        .select, .input {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            font-size: var(--text-sm);
+            padding: var(--space-3) var(--space-3);
+            border-radius: var(--radius-md);
+            min-height: var(--touch-target);
+            width: 100%;
+            transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+        }
+        .select:focus, .input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0,255,159,0.12);
+        }
+        .select option { background: var(--color-bg-elevated); }
+
+        /* Toggle */
+        .toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            min-height: var(--touch-target);
+            cursor: pointer;
+        }
+        .toggle .switch {
+            position: relative;
+            width: 40px; height: 22px;
+            background: var(--color-border-default);
+            border-radius: 11px;
+            transition: background var(--duration-fast);
+            flex-shrink: 0;
+        }
+        .toggle .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 18px; height: 18px;
+            background: var(--color-text-secondary);
+            border-radius: 50%;
+            transition: transform var(--duration-fast), background var(--duration-fast);
+        }
+        .toggle input { display: none; }
+        .toggle input:checked + .switch { background: rgba(0,255,159,0.25); }
+        .toggle input:checked + .switch::after { transform: translateX(18px); background: var(--color-primary); }
+        .toggle .t-label { font-size: var(--text-sm); color: var(--color-text-primary); }
+
+        /* === Buttons === */
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-top: var(--space-5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            min-height: var(--touch-target);
+            padding: var(--space-3) var(--space-5);
+            font-family: var(--font-sans);
+            font-size: var(--text-sm);
+            font-weight: 600;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            user-select: none;
+        }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn .icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        .btn-primary { background: var(--color-primary); color: var(--color-text-on-primary); border-color: var(--color-primary); }
+        .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); box-shadow: 0 0 16px rgba(0,255,159,0.4); }
+
+        .btn-secondary { background: transparent; color: var(--color-secondary); border-color: rgba(0,212,255,0.4); }
+        .btn-secondary:hover:not(:disabled) { background: rgba(0,212,255,0.1); }
+
+        .btn-destructive { background: transparent; color: var(--color-error); border-color: rgba(255,71,87,0.4); }
+        .btn-destructive:hover:not(:disabled) { background: rgba(255,71,87,0.1); }
+
+        .btn-ghost { background: transparent; color: var(--color-text-secondary); border-color: var(--color-border-default); }
+        .btn-ghost:hover:not(:disabled) { color: var(--color-text-primary); border-color: var(--color-border-accent); }
+
+        /* === Result area === */
+        .result-block {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+        .result-block .rb-label {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .result-block .rb-label .badge {
+            font-family: var(--font-sans);
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,184,0,0.15);
+            color: var(--color-warning);
+            border: 1px solid rgba(255,184,0,0.3);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .transcript {
+            font-size: var(--text-xl);
+            line-height: 1.5;
+            color: var(--color-text-primary);
+            min-height: 32px;
+            word-break: break-all;
+        }
+        .transcript.interim { color: var(--color-secondary); }
+        .transcript.empty { color: var(--color-text-tertiary); font-style: italic; font-size: var(--text-base); }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+        .meta-tile {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+        }
+        .meta-tile .mt-label {
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .meta-tile .mt-value {
+            font-family: var(--font-mono);
+            font-size: var(--text-lg);
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-top: var(--space-1);
+        }
+
+        /* === Event flow === */
+        .event-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+        .event-chip {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: all var(--duration-normal);
+        }
+        .event-chip.fired {
+            color: var(--color-primary);
+            border-color: var(--color-border-accent);
+            background: rgba(0,255,159,0.06);
+        }
+        .event-chip .count {
+            font-size: 10px;
+            background: var(--color-border-default);
+            color: var(--color-text-secondary);
+            padding: 0 5px;
+            border-radius: 8px;
+        }
+        .event-chip.fired .count { background: rgba(0,255,159,0.2); color: var(--color-primary); }
+
+        /* === Log panel === */
+        .log-panel {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        .log-panel .card-header { margin-bottom: var(--space-4); }
+        .log-actions { display: flex; gap: var(--space-2); }
+        .log-content {
+            max-height: 320px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            line-height: 1.7;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+        }
+        .log-content::-webkit-scrollbar { width: 8px; }
+        .log-content::-webkit-scrollbar-track { background: transparent; }
+        .log-content::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 4px; }
+
+        .log-entry {
+            display: flex;
+            gap: var(--space-3);
+            padding: 2px 0;
+        }
+        .log-time { color: var(--color-text-tertiary); flex-shrink: 0; }
+        .log-tag { flex-shrink: 0; min-width: 90px; font-weight: 600; }
+        .log-message { color: var(--color-text-secondary); word-break: break-all; }
+        .log-entry.success .log-tag { color: var(--color-success); }
+        .log-entry.success .log-message { color: var(--color-text-primary); }
+        .log-entry.error .log-tag { color: var(--color-error); }
+        .log-entry.error .log-message { color: var(--color-error); }
+        .log-entry.warning .log-tag { color: var(--color-warning); }
+        .log-entry.event .log-tag { color: var(--color-secondary); }
+        .log-entry.info .log-tag { color: var(--color-text-tertiary); }
+
+        /* === Error reference === */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--text-xs);
+        }
+        .ref-table th, .ref-table td {
+            text-align: left;
+            padding: var(--space-2) var(--space-3);
+            border-bottom: 1px solid var(--color-border-muted);
+        }
+        .ref-table th {
+            color: var(--color-text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 11px;
+        }
+        .ref-table code { font-family: var(--font-mono); color: var(--color-accent); }
+        .ref-table td:first-child { font-family: var(--font-mono); color: var(--color-secondary); }
+
+        footer {
+            text-align: center;
+            color: var(--color-text-tertiary);
+            font-size: var(--text-xs);
+            padding: var(--space-8) 0;
+            font-family: var(--font-mono);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+
+    <header class="page-header">
+        <div class="container">
+            <div class="header-badge"><span class="dot"></span> ArkWeb · Web Speech API</div>
+            <h1 class="page-title">语音识别测试 · SpeechRecognition</h1>
+            <p class="page-description">
+                通过标准 Web Speech API 测试 HarmonyOS 端侧 ASR 引擎（@hms.ai.speechRecognizer）。
+                覆盖识别启停、语言约束、中间/最终结果、错误码与全事件流。
+            </p>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div class="container">
+
+            <!-- 兼容性检测结果 -->
+            <div id="supportAlert"></div>
+
+            <!-- 信息提示 -->
+            <div class="alert info">
+                <svg class="alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div>
+                    <div class="alert-title">端侧离线引擎 · 仅支持中文</div>
+                    <div class="alert-message">
+                        本实现走 HarmonyOS Core Speech Kit 离线模型，引擎仅支持 <code>zh-CN</code>（代码中对 <code>zh</code> 前缀做大小写不敏感匹配，zh-CN / zh-Hans / zh-TW 均可）。
+                        选择其它语言会收到 <code>language-not-supported</code> 错误。识别结果 <strong>不携带 confidence（恒为 0）</strong>，且无候选词列表。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控制面板 -->
+            <section class="card" aria-labelledby="controls-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="controls-title"><span class="num">01</span> 识别配置</h2>
+                    <div id="statusPill" class="status-pill"><span class="dot"></span><span id="statusText">空闲</span></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="label" for="langSelect">
+                            语言 lang
+                            <span class="hint">引擎以 zh 前缀匹配</span>
+                        </label>
+                        <select id="langSelect" class="select">
+                            <option value="zh-CN" selected>zh-CN（中文 · 受支持）</option>
+                            <option value="zh-Hans-CN">zh-Hans-CN（受支持）</option>
+                            <option value="zh-TW">zh-TW（受支持）</option>
+                            <option value="en-US">en-US（测试不支持）</option>
+                            <option value="ja-JP">ja-JP（测试不支持）</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="maxAltInput">
+                            maxAlternatives
+                            <span class="hint">候选数</span>
+                        </label>
+                        <input id="maxAltInput" class="input" type="number" min="1" max="10" value="1">
+                    </div>
+
+                    <label class="toggle">
+                        <span class="t-label">continuous 连续模式</span>
+                        <input id="continuousToggle" type="checkbox">
+                        <span class="switch"></span>
+                    </label>
+
+                    <label class="toggle">
+                        <span class="t-label">interimResults 中间结果</span>
+                        <input id="interimToggle" type="checkbox" checked>
+                        <span class="switch"></span>
+                    </label>
+                </div>
+
+                <div class="mic-visual" id="micVisual" aria-hidden="true">
+                    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="startBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                        <span>开始识别</span>
+                    </button>
+                    <button class="btn btn-secondary" id="stopBtn" disabled>
+                        <svg class="icon" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                        <span>停止 stop()</span>
+                    </button>
+                    <button class="btn btn-destructive" id="abortBtn" disabled>
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        <span>中止 abort()</span>
+                    </button>
+                    <button class="btn btn-ghost" id="clearBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                        <span>清空结果</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 结果展示 -->
+            <section class="card" aria-labelledby="result-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="result-title"><span class="num">02</span> 识别结果</h2>
+                </div>
+
+                <div class="result-block">
+                    <div class="rb-label">中间结果 interim <span class="badge">实时更新</span></div>
+                    <div id="interimText" class="transcript empty">等待开始识别…</div>
+                </div>
+
+                <div class="result-block">
+                    <div class="rb-label">最终结果 final</div>
+                    <div id="finalText" class="transcript empty">尚无最终结果</div>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-tile">
+                        <div class="mt-label">本轮结果数</div>
+                        <div class="mt-value" id="metaResults">0</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">累计最终句数</div>
+                        <div class="mt-value" id="metaFinal">0</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">confidence</div>
+                        <div class="mt-value" id="metaConf">—</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">错误次数</div>
+                        <div class="mt-value" id="metaErrors">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 事件流 -->
+            <section class="card" aria-labelledby="event-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="event-title"><span class="num">03</span> 事件流</h2>
+                </div>
+                <div class="event-flow" id="eventFlow">
+                    <div class="event-chip" data-evt="start">start <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="audiostart">audiostart <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="speechstart">speechstart <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="result">result <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="speechend">speechend <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="audioend">audioend <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="error">error <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="end">end <span class="count">0</span></div>
+                </div>
+            </section>
+
+            <!-- 日志 -->
+            <section class="log-panel" aria-labelledby="log-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="log-title"><span class="num">04</span> 系统日志</h2>
+                    <div class="log-actions">
+                        <button class="btn btn-ghost" id="clearLogBtn" style="min-height:36px;padding:6px 12px;font-size:12px;">清空日志</button>
+                    </div>
+                </div>
+                <div class="log-content" id="logArea" role="log" aria-live="polite"></div>
+            </section>
+
+            <!-- 错误码参考 -->
+            <section class="card" aria-labelledby="ref-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="ref-title"><span class="num">05</span> 错误码参考</h2>
+                </div>
+                <div class="alert warning" style="margin-bottom:var(--space-4);">
+                    <svg class="alert-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                        <div class="alert-title">Web Speech error 映射自 kit 错误码</div>
+                        <div class="alert-message">adapter 把 Core Speech Kit 的 <code>1002200xxx</code> 系列错误码映射到右侧 Web Speech <code>error</code> 取值。</div>
+                    </div>
+                </div>
+                <table class="ref-table">
+                    <thead>
+                        <tr><th>error 值</th><th>含义</th><th>kit 来源</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>no-speech</td><td>未检测到语音</td><td>kNoSpeech</td></tr>
+                        <tr><td>aborted</td><td>用户主动中止</td><td>kAborted</td></tr>
+                        <tr><td>audio-capture</td><td>音频采集失败</td><td>kAudioCapture</td></tr>
+                        <tr><td>network</td><td>其它 / 未知错误</td><td>401 / 1002200009 等 → kNetwork</td></tr>
+                        <tr><td>not-allowed</td><td>无麦克风权限</td><td>1002200012 → kNotAllowed</td></tr>
+                        <tr><td>service-not-allowed</td><td>引擎创建失败 / 忙</td><td>1002200001/0006/0007/0008 → kServiceNotAllowed</td></tr>
+                        <tr><td>language-not-supported</td><td>语言不支持（非 zh）</td><td>kLanguageNotSupported</td></tr>
+                        <tr><td>no-match</td><td>识别结束但无结果</td><td>kNoMatch</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <footer>ArkWeb Web Speech API Test · 对应 web_speech_api.patch</footer>
+        </div>
+    </main>
+
+    <script>
+        // ============================================================
+        // Web Speech API 识别测试逻辑
+        // 对应 patch: ohos_speech_recognition_engine + arkts_speech_recognizer_adapter
+        // ============================================================
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+        const $ = (id) => document.getElementById(id);
+        const logArea = $('logArea');
+        const eventCounts = { start:0, audiostart:0, speechstart:0, result:0, speechend:0, audioend:0, error:0, end:0 };
+
+        let recognition = null;
+        let isRunning = false;
+        let finalSentences = 0;
+        let errorCount = 0;
+
+        // ---- 兼容性检测 ----
+        function renderSupport() {
+            const host = SR ? 'SpeechRecognition' : (window.webkitSpeechRecognition ? 'webkitSpeechRecognition' : null);
+            const box = $('supportAlert');
+            if (!SR) {
+                box.innerHTML = `
+                    <div class="alert error">
+                        <svg class="alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <div><div class="alert-title">浏览器/引擎不支持 Web Speech API</div>
+                        <div class="alert-message">当前环境未暴露 <code>SpeechRecognition</code> / <code>webkitSpeechRecognition</code>。请在 ArkWeb 或支持该 API 的浏览器中打开本页。</div></div>
+                    </div>`;
+                $('startBtn').disabled = true;
+            } else {
+                box.innerHTML = `
+                    <div class="alert info">
+                        <svg class="alert-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        <div><div class="alert-title">API 可用：${host}</div>
+                        <div class="alert-message">已检测到识别构造器。点击「开始识别」授权麦克风并说话。</div></div>
+                    </div>`;
+            }
+        }
+
+        // ---- 日志 ----
+        function log(tag, message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const t = new Date().toLocaleTimeString('zh-CN', { hour12: false }) +
+                      '.' + String(Date.now() % 1000).padStart(3, '0');
+            entry.innerHTML =
+                `<span class="log-time">[${t}]</span>` +
+                `<span class="log-tag">${tag}</span>` +
+                `<span class="log-message">${message}</span>`;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function markEvent(name) {
+            if (!(name in eventCounts)) return;
+            eventCounts[name]++;
+            const chip = document.querySelector(`.event-chip[data-evt="${name}"]`);
+            if (chip) {
+                chip.classList.add('fired');
+                chip.querySelector('.count').textContent = eventCounts[name];
+            }
+        }
+
+        function resetEventChips() {
+            for (const k of Object.keys(eventCounts)) eventCounts[k] = 0;
+            document.querySelectorAll('.event-chip').forEach(c => {
+                c.classList.remove('fired');
+                c.querySelector('.count').textContent = '0';
+            });
+        }
+
+        // ---- 状态 ----
+        function setStatus(text, state) {
+            const pill = $('statusPill');
+            pill.className = 'status-pill' + (state ? ' ' + state : '');
+            $('statusText').textContent = text;
+            $('micVisual').classList.toggle('active', state === 'listening');
+        }
+
+        function setRunning(running) {
+            isRunning = running;
+            $('startBtn').disabled = running || !SR;
+            $('stopBtn').disabled = !running;
+            $('abortBtn').disabled = !running;
+            // 连续模式下 stop 才有意义；非连续会自动结束
+            $('stopBtn').title = $('continuousToggle').checked ? '结束本轮并等待最终结果' : '非连续模式会自动结束';
+        }
+
+        // ---- 构造识别器 ----
+        function buildRecognition() {
+            const r = new SR();
+            r.lang = $('langSelect').value;
+            r.continuous = $('continuousToggle').checked;
+            r.interimResults = $('interimToggle').checked;
+            r.maxAlternatives = Math.max(1, parseInt($('maxAltInput').value, 10) || 1);
+
+            log('CONFIG', `lang=${r.lang} continuous=${r.continuous} interimResults=${r.interimResults} maxAlternatives=${r.maxAlternatives}`, 'info');
+
+            r.onstart = () => {
+                markEvent('start');
+                log('onstart', '识别会话已开始', 'success');
+                setStatus('正在监听', 'listening');
+            };
+
+            r.onaudiostart = () => {
+                markEvent('audiostart');
+                log('onaudiostart', '音频采集已开始', 'event');
+            };
+
+            r.onspeechstart = () => {
+                markEvent('speechstart');
+                log('onspeechstart', '检测到语音开始 (vadBegin)', 'event');
+            };
+
+            r.onspeechend = () => {
+                markEvent('speechend');
+                log('onspeechend', '检测到语音结束 (vadEnd)', 'event');
+            };
+
+            r.onaudioend = () => {
+                markEvent('audioend');
+                log('onaudioend', '音频采集已结束', 'event');
+            };
+
+            r.onresult = (event) => {
+                markEvent('result');
+                const resultIndex = event.resultIndex;
+                const last = event.results[event.results.length - 1];
+                const totalResults = event.results.length;
+                $('metaResults').textContent = totalResults;
+
+                let interimStr = '';
+                for (let i = resultIndex; i < totalResults; i++) {
+                    const res = event.results[i];
+                    const transcript = res[0] ? res[0].transcript : '';
+                    const confidence = res[0] ? res[0].confidence : 0;
+                    const isFinal = res.isFinal;
+                    log('onresult', `[${i}] isFinal=${isFinal} confidence=${confidence.toFixed(2)} transcript="${transcript}"`, 'event');
+                    if (isFinal) {
+                        appendFinal(transcript);
+                        $('metaConf').textContent = confidence.toFixed(2);
+                    } else {
+                        interimStr += transcript;
+                    }
+                }
+                setInterim(interimStr);
+            };
+
+            r.onerror = (event) => {
+                markEvent('error');
+                errorCount++;
+                $('metaErrors').textContent = errorCount;
+                const err = event.error || 'unknown';
+                const meaning = ERROR_MEANING[err] || '未知错误';
+                log('onerror', `error="${err}" (${meaning})`, 'error');
+                setStatus('出错: ' + err, 'error');
+            };
+
+            r.onend = () => {
+                markEvent('end');
+                log('onend', '识别会话已结束', 'success');
+                setInterim('');
+                setStatus('空闲', '');
+                setRunning(false);
+            };
+
+            return r;
+        }
+
+        const ERROR_MEANING = {
+            'no-speech': '未检测到语音',
+            'aborted': '用户中止',
+            'audio-capture': '音频采集失败',
+            'network': '网络/未知错误',
+            'not-allowed': '麦克风权限被拒',
+            'service-not-allowed': '引擎不可用/忙',
+            'bad-grammar': '语法错误',
+            'language-not-supported': '语言不支持（非 zh）',
+            'unknown': '未知'
+        };
+
+        // ---- 结果展示 ----
+        function setInterim(text) {
+            const el = $('interimText');
+            if (text) { el.textContent = text; el.className = 'transcript interim'; }
+            else { el.textContent = isRunning ? '正在聆听…' : '等待开始识别…'; el.className = 'transcript empty'; }
+        }
+
+        function appendFinal(text) {
+            const el = $('finalText');
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            if (el.classList.contains('empty')) { el.textContent = ''; el.className = 'transcript'; }
+            const span = document.createElement('span');
+            span.textContent = (finalSentences > 0 ? ' ' : '') + trimmed;
+            el.appendChild(span);
+            finalSentences++;
+            $('metaFinal').textContent = finalSentences;
+        }
+
+        function clearResults() {
+            $('interimText').textContent = '等待开始识别…';
+            $('interimText').className = 'transcript empty';
+            $('finalText').textContent = '尚无最终结果';
+            $('finalText').className = 'transcript empty';
+            $('metaResults').textContent = '0';
+            $('metaFinal').textContent = '0';
+            $('metaConf').textContent = '—';
+            $('metaErrors').textContent = '0';
+            finalSentences = 0;
+            errorCount = 0;
+            resetEventChips();
+            log('CLEAR', '已清空结果与统计', 'info');
+        }
+
+        // ---- 按钮动作 ----
+        function start() {
+            if (!SR) return;
+            try {
+                recognition = buildRecognition();
+                log('START', '调用 recognition.start()', 'info');
+                recognition.start();
+                setRunning(true);
+                setInterim('');
+            } catch (e) {
+                log('EXCEPTION', 'start() 抛出: ' + (e && e.message || e), 'error');
+                setRunning(false);
+            }
+        }
+
+        function stop() {
+            if (recognition) {
+                log('STOP', '调用 recognition.stop() —— 结束音频流，等待最终结果', 'info');
+                try { recognition.stop(); } catch (e) { log('EXCEPTION', String(e), 'error'); }
+            }
+        }
+
+        function abort() {
+            if (recognition) {
+                log('ABORT', '调用 recognition.abort() —— 取消会话，丢弃结果', 'warning');
+                try { recognition.abort(); } catch (e) { log('EXCEPTION', String(e), 'error'); }
+            }
+        }
+
+        // ---- 绑定 ----
+        $('startBtn').addEventListener('click', start);
+        $('stopBtn').addEventListener('click', stop);
+        $('abortBtn').addEventListener('click', abort);
+        $('clearBtn').addEventListener('click', clearResults);
+        $('clearLogBtn').addEventListener('click', () => { logArea.innerHTML = ''; });
+
+        // 配置变更提示（仅在空闲时可改）
+        ['langSelect', 'continuousToggle', 'interimToggle', 'maxAltInput'].forEach(id => {
+            $(id).addEventListener('change', () => {
+                if (isRunning) log('CONFIG', '运行中修改配置，下一次 start 生效', 'warning');
+            });
+        });
+
+        // ---- 初始化 ----
+        renderSupport();
+        setStatus('空闲', '');
+        log('INIT', '页面就绪。' + (SR ? '检测到 ' + (window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition') : '未检测到 Web Speech API'), 'success');
+        log('INIT', '提示：本端侧引擎仅支持 zh-CN，confidence 恒为 0，无候选词。', 'info');
+    </script>
+</body>
+</html>
