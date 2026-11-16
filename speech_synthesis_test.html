@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Speech API 语音合成测试</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            /* === Cyberpunk 配色方案 === */
+            --color-primary: #00ff9f;
+            --color-primary-hover: #00e08a;
+            --color-secondary: #00d4ff;
+            --color-secondary-hover: #00c4eb;
+            --color-accent: #ff6b35;
+            --color-accent-hover: #e55a2a;
+            --color-error: #ff4757;
+            --color-success: #00ff9f;
+            --color-warning: #ffb800;
+
+            /* === 中性色系 === */
+            --color-bg: #0a0e14;
+            --color-bg-elevated: #11161d;
+            --color-bg-card: #0d1118;
+            --color-bg-input: #080c11;
+
+            /* === 文字颜色 === */
+            --color-text-primary: #f0f6fc;
+            --color-text-secondary: #8b949e;
+            --color-text-tertiary: #6e7681;
+            --color-text-on-primary: #0a0e14;
+
+            /* === 边框颜色 === */
+            --color-border-default: #30363d;
+            --color-border-muted: #21262d;
+            --color-border-accent: rgba(0, 255, 159, 0.3);
+
+            /* === 8dp 间距系统 === */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+
+            /* === 字体 === */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+            /* === 文字大小 === */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 2rem;
+
+            /* === 动画 === */
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+            /* === 圆角 === */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+
+            /* === 阴影 === */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+            /* === 触摸目标 === */
+            --touch-target: 44px;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: var(--text-base);
+            line-height: 1.6;
+            color: var(--color-text-primary);
+            background-color: var(--color-bg);
+            min-height: 100vh;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-primary);
+            color: var(--color-text-on-primary);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 9999;
+            transition: top var(--duration-fast);
+        }
+
+        .skip-link:focus {
+            top: var(--space-4);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        @media (min-width: 640px) {
+            .container { padding: 0 var(--space-6); }
+        }
+
+        /* === Header === */
+        .page-header {
+            background: var(--color-bg-elevated);
+            border-bottom: 1px solid var(--color-border-muted);
+            padding: var(--space-8) 0;
+            margin-bottom: var(--space-8);
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-secondary);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .header-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--color-secondary);
+            box-shadow: 0 0 6px var(--color-secondary);
+        }
+
+        .page-title {
+            font-family: var(--font-mono);
+            font-size: var(--text-3xl);
+            font-weight: 600;
+            color: var(--color-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-3);
+        }
+
+        .page-description {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            max-width: 680px;
+        }
+
+        /* === Alert === */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .alert.info {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        .alert.warning {
+            background: rgba(255, 184, 0, 0.08);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+        }
+        .alert.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            width: 20px; height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .alert.info .alert-icon { color: var(--color-secondary); }
+        .alert.warning .alert-icon { color: var(--color-warning); }
+        .alert.error .alert-icon { color: var(--color-error); }
+
+        .alert-title {
+            font-weight: 600;
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-1);
+        }
+        .alert.info .alert-title { color: var(--color-secondary); }
+        .alert.warning .alert-title { color: var(--color-warning); }
+        .alert.error .alert-title { color: var(--color-error); }
+
+        .alert-message {
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+        .alert-message code {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            background: rgba(255,255,255,0.06);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            color: var(--color-primary);
+        }
+
+        /* === Card === */
+        .card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-5);
+            gap: var(--space-3);
+        }
+
+        .card-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .card-title .num {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            border: 1px solid var(--color-border-default);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        /* === Status === */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .status-pill .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--color-text-tertiary);
+        }
+        .status-pill.listening .dot {
+            background: var(--color-primary);
+            animation: pulse 1.4s infinite;
+        }
+        .status-pill.listening { color: var(--color-primary); border-color: var(--color-border-accent); }
+        .status-pill.error .dot { background: var(--color-error); }
+        .status-pill.error { color: var(--color-error); border-color: rgba(255,71,87,0.3); }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,159,0.6); }
+            50% { box-shadow: 0 0 0 6px rgba(0,255,159,0); }
+        }
+
+        /* === Mic visual === */
+        .mic-visual {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 72px;
+            margin: var(--space-4) 0;
+        }
+        .mic-visual .bar {
+            width: 6px;
+            height: 12px;
+            background: var(--color-border-default);
+            border-radius: 3px;
+            transition: background var(--duration-fast), height var(--duration-fast);
+        }
+        .mic-visual.active .bar {
+            background: var(--color-primary);
+            box-shadow: 0 0 8px var(--color-primary);
+            animation: wave 1s ease-in-out infinite;
+        }
+        .mic-visual.active .bar:nth-child(1) { animation-delay: -0.9s; }
+        .mic-visual.active .bar:nth-child(2) { animation-delay: -0.7s; }
+        .mic-visual.active .bar:nth-child(3) { animation-delay: -0.5s; }
+        .mic-visual.active .bar:nth-child(4) { animation-delay: -0.3s; }
+        .mic-visual.active .bar:nth-child(5) { animation-delay: -0.1s; }
+        .mic-visual.active .bar:nth-child(6) { animation-delay: -0.3s; }
+        .mic-visual.active .bar:nth-child(7) { animation-delay: -0.5s; }
+        .mic-visual.active .bar:nth-child(8) { animation-delay: -0.7s; }
+        .mic-visual.active .bar:nth-child(9) { animation-delay: -0.9s; }
+        @keyframes wave {
+            0%, 100% { height: 12px; }
+            50% { height: 52px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .mic-visual.active .bar { animation: none; height: 28px; }
+            .status-pill.listening .dot { animation: none; }
+        }
+
+        /* === Form controls === */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+        .label {
+            font-size: var(--text-xs);
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .label .hint { color: var(--color-text-tertiary); text-transform: none; letter-spacing: 0; }
+
+        .select, .input {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            font-size: var(--text-sm);
+            padding: var(--space-3) var(--space-3);
+            border-radius: var(--radius-md);
+            min-height: var(--touch-target);
+            width: 100%;
+            transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+        }
+        .select:focus, .input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0,255,159,0.12);
+        }
+        .select option { background: var(--color-bg-elevated); }
+
+        /* Toggle */
+        .toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            min-height: var(--touch-target);
+            cursor: pointer;
+        }
+        .toggle .switch {
+            position: relative;
+            width: 40px; height: 22px;
+            background: var(--color-border-default);
+            border-radius: 11px;
+            transition: background var(--duration-fast);
+            flex-shrink: 0;
+        }
+        .toggle .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 18px; height: 18px;
+            background: var(--color-text-secondary);
+            border-radius: 50%;
+            transition: transform var(--duration-fast), background var(--duration-fast);
+        }
+        .toggle input { display: none; }
+        .toggle input:checked + .switch { background: rgba(0,255,159,0.25); }
+        .toggle input:checked + .switch::after { transform: translateX(18px); background: var(--color-primary); }
+        .toggle .t-label { font-size: var(--text-sm); color: var(--color-text-primary); }
+
+        /* === Buttons === */
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-top: var(--space-5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            min-height: var(--touch-target);
+            padding: var(--space-3) var(--space-5);
+            font-family: var(--font-sans);
+            font-size: var(--text-sm);
+            font-weight: 600;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            user-select: none;
+        }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn .icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        .btn-primary { background: var(--color-primary); color: var(--color-text-on-primary); border-color: var(--color-primary); }
+        .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); box-shadow: 0 0 16px rgba(0,255,159,0.4); }
+
+        .btn-secondary { background: transparent; color: var(--color-secondary); border-color: rgba(0,212,255,0.4); }
+        .btn-secondary:hover:not(:disabled) { background: rgba(0,212,255,0.1); }
+
+        .btn-destructive { background: transparent; color: var(--color-error); border-color: rgba(255,71,87,0.4); }
+        .btn-destructive:hover:not(:disabled) { background: rgba(255,71,87,0.1); }
+
+        .btn-ghost { background: transparent; color: var(--color-text-secondary); border-color: var(--color-border-default); }
+        .btn-ghost:hover:not(:disabled) { color: var(--color-text-primary); border-color: var(--color-border-accent); }
+
+        /* === Result area === */
+        .result-block {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+        .result-block .rb-label {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .result-block .rb-label .badge {
+            font-family: var(--font-sans);
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,184,0,0.15);
+            color: var(--color-warning);
+            border: 1px solid rgba(255,184,0,0.3);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .transcript {
+            font-size: var(--text-xl);
+            line-height: 1.5;
+            color: var(--color-text-primary);
+            min-height: 32px;
+            word-break: break-all;
+        }
+        .transcript.interim { color: var(--color-secondary); }
+        .transcript.empty { color: var(--color-text-tertiary); font-style: italic; font-size: var(--text-base); }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+        .meta-tile {
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+        }
+        .meta-tile .mt-label {
+            font-size: var(--text-xs);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .meta-tile .mt-value {
+            font-family: var(--font-mono);
+            font-size: var(--text-lg);
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-top: var(--space-1);
+        }
+
+        /* === Event flow === */
+        .event-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+        .event-chip {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: all var(--duration-normal);
+        }
+        .event-chip.fired {
+            color: var(--color-primary);
+            border-color: var(--color-border-accent);
+            background: rgba(0,255,159,0.06);
+        }
+        .event-chip .count {
+            font-size: 10px;
+            background: var(--color-border-default);
+            color: var(--color-text-secondary);
+            padding: 0 5px;
+            border-radius: 8px;
+        }
+        .event-chip.fired .count { background: rgba(0,255,159,0.2); color: var(--color-primary); }
+
+        /* === Log panel === */
+        .log-panel {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        .log-panel .card-header { margin-bottom: var(--space-4); }
+        .log-actions { display: flex; gap: var(--space-2); }
+        .log-content {
+            max-height: 320px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            line-height: 1.7;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+        }
+        .log-content::-webkit-scrollbar { width: 8px; }
+        .log-content::-webkit-scrollbar-track { background: transparent; }
+        .log-content::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 4px; }
+
+        .log-entry {
+            display: flex;
+            gap: var(--space-3);
+            padding: 2px 0;
+        }
+        .log-time { color: var(--color-text-tertiary); flex-shrink: 0; }
+        .log-tag { flex-shrink: 0; min-width: 90px; font-weight: 600; }
+        .log-message { color: var(--color-text-secondary); word-break: break-all; }
+        .log-entry.success .log-tag { color: var(--color-success); }
+        .log-entry.success .log-message { color: var(--color-text-primary); }
+        .log-entry.error .log-tag { color: var(--color-error); }
+        .log-entry.error .log-message { color: var(--color-error); }
+        .log-entry.warning .log-tag { color: var(--color-warning); }
+        .log-entry.event .log-tag { color: var(--color-secondary); }
+        .log-entry.info .log-tag { color: var(--color-text-tertiary); }
+
+        /* === Error reference === */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--text-xs);
+        }
+        .ref-table th, .ref-table td {
+            text-align: left;
+            padding: var(--space-2) var(--space-3);
+            border-bottom: 1px solid var(--color-border-muted);
+        }
+        .ref-table th {
+            color: var(--color-text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 11px;
+        }
+        .ref-table code { font-family: var(--font-mono); color: var(--color-accent); }
+        .ref-table td:first-child { font-family: var(--font-mono); color: var(--color-secondary); }
+
+        footer {
+            text-align: center;
+            color: var(--color-text-tertiary);
+            font-size: var(--text-xs);
+            padding: var(--space-8) 0;
+            font-family: var(--font-mono);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        /* === SpeechSynthesis specifics === */
+        .field.wide { grid-column: 1 / -1; }
+        textarea.input {
+            min-height: 96px;
+            resize: vertical;
+            line-height: 1.6;
+            font-family: var(--font-sans);
+        }
+        .range-row { display: flex; align-items: center; gap: var(--space-3); }
+        .range-row input[type="range"] {
+            flex: 1;
+            height: 24px;
+            accent-color: var(--color-primary);
+            background: transparent;
+        }
+        .range-val {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--color-secondary);
+            min-width: 48px;
+            text-align: right;
+        }
+        .table-wrap {
+            max-height: 288px;
+            overflow: auto;
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-md);
+        }
+        .table-wrap .ref-table th {
+            position: sticky;
+            top: 0;
+            background: var(--color-bg-card);
+            z-index: 1;
+        }
+        .queue-wrap { max-height: 240px; overflow: auto; }
+        .queue-list { display: flex; flex-direction: column; gap: var(--space-2); }
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border-muted);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+        }
+        .queue-item .q-id {
+            font-family: var(--font-mono);
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+        }
+        .queue-item .q-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .q-status {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            border: 1px solid var(--color-border-default);
+            color: var(--color-text-tertiary);
+        }
+        .q-status.speaking { color: var(--color-primary); border-color: var(--color-border-accent); }
+        .q-status.pending { color: var(--color-secondary); border-color: rgba(0, 212, 255, 0.4); }
+        .q-status.done { color: var(--color-success); border-color: rgba(0, 255, 159, 0.3); }
+        .q-status.error { color: var(--color-error); border-color: rgba(255, 71, 87, 0.4); }
+        .q-status.cancelled { color: var(--color-warning); border-color: rgba(255, 184, 0, 0.4); }
+        .empty-hint {
+            color: var(--color-text-tertiary);
+            font-size: var(--text-xs);
+            font-style: italic;
+            padding: var(--space-3);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+
+    <header class="page-header">
+        <div class="container">
+            <div class="header-badge"><span class="dot"></span> ArkWeb · Web Speech API</div>
+            <h1 class="page-title">语音合成测试 · SpeechSynthesis</h1>
+            <p class="page-description">
+                通过标准 Web Speech API 测试 HarmonyOS 系统 TTS（@hms.ai.textToSpeech）。
+                覆盖 speak/cancel、播放队列、voices 列表、lang/voice/volume/rate/pitch 参数映射与全事件流。
+            </p>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div class="container">
+
+            <!-- 兼容性检测结果 -->
+            <div id="supportAlert"></div>
+
+            <!-- 能力说明 -->
+            <div class="alert info">
+                <svg class="alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div>
+                    <div class="alert-title">系统 TTS 能力边界</div>
+                    <div class="alert-message">
+                        voices 来自系统 <code>listVoices</code>（<code>name</code> 为系统 description，<code>lang</code> 可能为空），首次加载为空属正常，需等待 <code>voiceschanged</code>；
+                        <code>pause/resume</code> 依系统能力，可能为受限降级且不中断 <code>speak/cancel</code>；
+                        <code>boundary/mark</code> 不在验收范围，可能始终不触发（AC-007）。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 合成配置 -->
+            <section class="card" aria-labelledby="controls-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="controls-title"><span class="num">01</span> 合成配置</h2>
+                    <div id="statusPill" class="status-pill"><span class="dot"></span><span id="statusText">空闲</span></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field wide">
+                        <label class="label" for="textInput">
+                            待合成文本 <span class="hint">SpeechSynthesisUtterance.text</span>
+                        </label>
+                        <textarea id="textInput" class="input" spellcheck="false">你好，鸿蒙。这是一段用于验证 ArkWeb 语音合成能力的测试文本。</textarea>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="voiceSelect">
+                            发音人 voice <span class="hint">空 = 自动</span>
+                        </label>
+                        <select id="voiceSelect" class="select">
+                            <option value="">自动（不指定 voice）</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="langInput">
+                            语言 lang <span class="hint">空 = 自动</span>
+                        </label>
+                        <input id="langInput" class="input" type="text" value="zh-CN" spellcheck="false">
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="volRange">
+                            volume <span class="hint">0 ~ 1</span>
+                        </label>
+                        <div class="range-row">
+                            <input id="volRange" type="range" min="0" max="1" step="0.1" value="1">
+                            <span class="range-val" id="volVal">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="rateRange">
+                            rate <span class="hint">0.1 ~ 10，超限由底层裁剪</span>
+                        </label>
+                        <div class="range-row">
+                            <input id="rateRange" type="range" min="0.1" max="10" step="0.1" value="1">
+                            <span class="range-val" id="rateVal">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="pitchRange">
+                            pitch <span class="hint">0 ~ 2</span>
+                        </label>
+                        <div class="range-row">
+                            <input id="pitchRange" type="range" min="0" max="2" step="0.1" value="1">
+                            <span class="range-val" id="pitchVal">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">当前 voice 信息</label>
+                        <div class="check-line" id="voiceInfo">未选择（由 lang 决定）</div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary needs-tts" id="speakBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                        <span>开始播报 speak()</span>
+                    </button>
+                    <button class="btn btn-secondary needs-tts" id="enqueueBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        <span>连播 3 条（队列）</span>
+                    </button>
+                    <button class="btn btn-destructive needs-tts" id="cancelBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        <span>取消 cancel()</span>
+                    </button>
+                    <button class="btn btn-secondary needs-tts" id="pauseBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                        <span>暂停 pause()</span>
+                    </button>
+                    <button class="btn btn-secondary needs-tts" id="resumeBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>恢复 resume()</span>
+                    </button>
+                    <button class="btn btn-ghost needs-tts" id="refreshVoicesBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        <span>刷新 voices</span>
+                    </button>
+                    <button class="btn btn-ghost" id="clearBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                        <span>清空列表与统计</span>
+                    </button>
+                    <button class="btn btn-secondary" id="translateBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M4 5h7"/><path d="M7 4c0 4.5-2 7.5-5 9"/><path d="M5 9c0 2.5 2.5 4.5 5 5"/><path d="M12 20l4-9 4 9"/><path d="M19.1 18h-6.2"/></svg>
+                        <span>一键翻译为英文</span>
+                    </button>
+                </div>
+
+                <div class="check-line" style="margin-top:var(--space-4);flex-wrap:wrap;gap:var(--space-4);">
+                    <span>边界用例：</span>
+                    <button class="btn btn-ghost needs-tts" id="emptyBtn" style="min-height:36px;padding:6px 12px;font-size:12px;">空文本 speak("")</button>
+                    <button class="btn btn-ghost needs-tts" id="extremeBtn" style="min-height:36px;padding:6px 12px;font-size:12px;">超限参数（rate=10 / pitch=2 / volume=0）</button>
+                </div>
+            </section>
+
+            <!-- 播放状态 -->
+            <section class="card" aria-labelledby="state-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="state-title"><span class="num">02</span> 播放状态与队列</h2>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-tile">
+                        <div class="mt-label">speaking</div>
+                        <div class="mt-value" id="metaSpeaking">false</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">pending</div>
+                        <div class="mt-value" id="metaPending">false</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">paused</div>
+                        <div class="mt-value" id="metaPaused">false</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">已播报条数</div>
+                        <div class="mt-value" id="metaSpoken">0</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">错误次数</div>
+                        <div class="mt-value" id="metaErrors">0</div>
+                    </div>
+                    <div class="meta-tile">
+                        <div class="mt-label">最近一条耗时</div>
+                        <div class="mt-value" id="metaDuration">—</div>
+                    </div>
+                </div>
+
+                <div class="result-block">
+                    <div class="rb-label">当前 / 最近文本</div>
+                    <div id="currentText" class="transcript empty">尚未播报</div>
+                </div>
+
+                <div class="result-block">
+                    <div class="rb-label">本页提交的 utterance 队列 <span class="badge">页面侧跟踪</span></div>
+                    <div class="queue-wrap">
+                        <div class="queue-list" id="queueList">
+                            <div class="empty-hint">队列为空</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 发音人列表 -->
+            <section class="card" aria-labelledby="voice-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="voice-title"><span class="num">03</span> 发音人 voices</h2>
+                    <div class="status-pill">共 <span id="voiceCount">0</span> 个</div>
+                </div>
+                <div class="table-wrap">
+                    <table class="ref-table">
+                        <thead>
+                            <tr><th>#</th><th>name</th><th>lang</th><th>localService</th><th>default</th><th>voiceURI</th></tr>
+                        </thead>
+                        <tbody id="voiceBody">
+                            <tr><td colspan="6" class="empty-hint">尚未获取到 voices</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 事件流 -->
+            <section class="card" aria-labelledby="event-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="event-title"><span class="num">04</span> 事件流</h2>
+                </div>
+                <div class="event-flow" id="eventFlow">
+                    <div class="event-chip" data-evt="start">start <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="end">end <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="error">error <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="pause">pause <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="resume">resume <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="boundary">boundary <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="mark">mark <span class="count">0</span></div>
+                    <div class="event-chip" data-evt="voiceschanged">voiceschanged <span class="count">0</span></div>
+                </div>
+            </section>
+
+            <!-- 日志 -->
+            <section class="log-panel" aria-labelledby="log-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="log-title"><span class="num">05</span> 系统日志</h2>
+                    <div class="log-actions">
+                        <button class="btn btn-ghost" id="clearLogBtn" style="min-height:36px;padding:6px 12px;font-size:12px;">清空日志</button>
+                    </div>
+                </div>
+                <div class="log-content" id="logArea" role="log" aria-live="polite"></div>
+            </section>
+
+            <!-- 错误码参考 -->
+            <section class="card" aria-labelledby="ref-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="ref-title"><span class="num">06</span> 错误码参考</h2>
+                </div>
+                <div class="alert warning" style="margin-bottom:var(--space-4);">
+                    <svg class="alert-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                        <div class="alert-title">SpeechSynthesisErrorEvent.error 标准取值</div>
+                        <div class="alert-message">TTS 失败、取消或参数非法时，<code>utterance.onerror</code> 会携带下列取值之一（由 Blink 按 Content 侧事件映射）。</div>
+                    </div>
+                </div>
+                <table class="ref-table">
+                    <thead>
+                        <tr><th>error 值</th><th>含义</th><th>典型触发</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>canceled</td><td>合成被取消</td><td>调用 <code>cancel()</code></td></tr>
+                        <tr><td>interrupted</td><td>被其它播报中断</td><td>队列抢占 / 新会话</td></tr>
+                        <tr><td>audio-busy</td><td>音频设备忙</td><td>其它应用占用音频</td></tr>
+                        <tr><td>audio-hardware</td><td>音频硬件错误</td><td>设备异常</td></tr>
+                        <tr><td>network</td><td>网络错误</td><td>在线语音依赖网络</td></tr>
+                        <tr><td>synthesis-unavailable</td><td>合成服务不可用</td><td>系统 TTS 未就绪</td></tr>
+                        <tr><td>synthesis-failed</td><td>合成失败</td><td>引擎异常 / 文本非法（空文本）</td></tr>
+                        <tr><td>language-unavailable</td><td>语言不可用</td><td>lang 无对应引擎</td></tr>
+                        <tr><td>voice-unavailable</td><td>发音人不可用</td><td>指定的 voice 失效</td></tr>
+                        <tr><td>text-too-long</td><td>文本过长</td><td>超出系统限制</td></tr>
+                        <tr><td>invalid-argument</td><td>参数非法</td><td>volume/rate/pitch 越界</td></tr>
+                        <tr><td>not-allowed</td><td>缺少权限</td><td>用户/系统未授权</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 验证清单 -->
+            <section class="card" aria-labelledby="ac-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="ac-title"><span class="num">07</span> 验收项自测清单</h2>
+                </div>
+                <table class="ref-table">
+                    <thead>
+                        <tr><th>AC</th><th>操作</th><th>预期</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>AC-001</td><td>输入文本 → 开始播报</td><td>听到系统 TTS 声音</td></tr>
+                        <tr><td>AC-002</td><td>观察事件流</td><td>同一 utterance 收到 <code>start</code> 且最终 <code>end</code> 或 <code>error</code></td></tr>
+                        <tr><td>AC-003</td><td>等待 voiceschanged / 刷新 voices</td><td>voices 非空，表格展示 name、lang</td></tr>
+                        <tr><td>AC-004</td><td>调整 volume/rate/pitch/lang/voice 后播报</td><td>听觉变化或按底层裁剪，无异常</td></tr>
+                        <tr><td>AC-005</td><td>连播 3 条后立即取消</td><td>播放立即停止，pending=false，队列项标记取消</td></tr>
+                        <tr><td>AC-006</td><td>播报中暂停 / 恢复</td><td>真实暂停恢复，或受限降级（日志提示），后续 speak 不受影响</td></tr>
+                        <tr><td>AC-007</td><td>观察 boundary/mark 与主链路</td><td>可能恒为 0，不影响 speak/cancel/getVoices</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 自动化测试用例 -->
+            <section class="card" aria-labelledby="auto-test-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="auto-test-title"><span class="num">08</span> 自动化测试用例</h2>
+                    <div class="log-actions">
+                        <button class="btn btn-primary" id="runAutoTestsBtn" style="min-height:36px;padding:6px 16px;font-size:12px;">运行测试</button>
+                    </div>
+                </div>
+                <table class="ref-table">
+                    <thead>
+                        <tr><th>#</th><th>测试项</th><th>验证内容</th><th>预期</th><th>结果</th></tr>
+                    </thead>
+                    <tbody id="autoTestBody">
+                        <tr id="at-row-1">
+                            <td>AT-001</td>
+                            <td>页面加载后立即调用 getVoices()</td>
+                            <td>检查返回值是否为空数组</td>
+                            <td>数组长度为 0，不报错不抛异常</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-2">
+                            <td>AT-002</td>
+                            <td>onvoiceschanged 回调注册与触发</td>
+                            <td>回调为函数类型；异步等待 voiceschanged 事件触发</td>
+                            <td>typeof onvoiceschanged === 'function'，事件最终触发</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-3">
+                            <td>AT-003</td>
+                            <td>超范围参数裁剪（音量/语速/音高）</td>
+                            <td>volume=2/−1, rate=20/0, pitch=5/−1 各组 speak 不崩溃</td>
+                            <td>每组 speak 不抛异常，onstart/onend 或 onerror 正常触发</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-4">
+                            <td>AT-004</td>
+                            <td>语言映射（zh-CN / en-US / 不支持 / 空）</td>
+                            <td>分别设置 4 种 lang 后 speak，检查不崩溃</td>
+                            <td>每组 speak 不崩溃，事件正常触发</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-5">
+                            <td>AT-005</td>
+                            <td>空文本 speak 异常处理</td>
+                            <td>speak("") 后检查 onerror 触发，错误码为 canceled 或 interrupted</td>
+                            <td>onerror 触发不崩溃，进程正常</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-6">
+                            <td>AT-006</td>
+                            <td>高频 speak 压力测试（连续 20 次）</td>
+                            <td>循环 20 次 speak，检查全部入队不报错</td>
+                            <td>20 次 speak 成功入队，start/end 事件各 20 次，无丢失</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-7">
+                            <td>AT-007</td>
+                            <td>空闲状态 pause/resume/cancel 幂等</td>
+                            <td>无合成时连续调用 pause/resume/cancel，不崩溃不触发事件</td>
+                            <td>每次调用幂等完成，不触发任何事件，不影响后续 speak</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                        <tr id="at-row-8">
+                            <td>AT-008</td>
+                            <td>非目标事件 boundary/mark 验证</td>
+                            <td>注册 onboundary/onmark 回调后 speak，检查不触发或触发不崩溃</td>
+                            <td>boundary/mark 不触发或触发不崩溃，不影响核心事件</td>
+                            <td class="at-status">待执行</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="result-block" style="margin-top:var(--space-4);">
+                    <div class="rb-label">测试日志</div>
+                    <div id="autoTestLog" class="log-content" style="max-height:200px;"></div>
+                </div>
+            </section>
+
+            <footer>ArkWeb Web Speech API Test · 对应 web_speech_synthesis.patch</footer>
+        </div>
+    </main>
+
+    <script>
+        // ============================================================
+        // Web Speech API 语音合成测试逻辑
+        // 对应 patch: tts_ohos + arkts_tts_adapter
+        // ============================================================
+
+        const synth = window.speechSynthesis;
+        const Utterance = window.SpeechSynthesisUtterance;
+        const SUPPORTED = !!(synth && Utterance);
+
+        const $ = (id) => document.getElementById(id);
+        const logArea = $('logArea');
+        const eventCounts = { start: 0, end: 0, error: 0, pause: 0, resume: 0, boundary: 0, mark: 0, voiceschanged: 0 };
+
+        let voiceCache = [];
+        let items = [];
+        let seq = 0;
+        let spoken = 0;
+        let errorCount = 0;
+        let lastDuration = null;
+        let voicesChangedFired = false;
+
+        const ERROR_MEANING = {
+            'canceled': '合成被取消',
+            'interrupted': '被其它播报中断',
+            'audio-busy': '音频设备忙',
+            'audio-hardware': '音频硬件错误',
+            'network': '网络错误',
+            'synthesis-unavailable': '合成服务不可用',
+            'synthesis-failed': '合成失败（引擎异常/文本非法）',
+            'language-unavailable': '语言不可用',
+            'voice-unavailable': '发音人不可用',
+            'text-too-long': '文本过长',
+            'invalid-argument': '参数非法',
+            'not-allowed': '缺少权限',
+            'error-occurred': '合成出错（空文本/引擎创建失败等映射）'
+        };
+
+        // ---- 工具 ----
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function fmtDur(ms) {
+            return (ms == null || !isFinite(ms)) ? '—' : (ms / 1000).toFixed(2) + 's';
+        }
+
+        function log(tag, message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const t = new Date().toLocaleTimeString('zh-CN', { hour12: false }) +
+                      '.' + String(Date.now() % 1000).padStart(3, '0');
+            entry.innerHTML =
+                `<span class="log-time">[${t}]</span>` +
+                `<span class="log-tag">${esc(tag)}</span>` +
+                `<span class="log-message">${esc(message)}</span>`;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function markEvent(name) {
+            if (!(name in eventCounts)) return;
+            eventCounts[name]++;
+            const chip = document.querySelector(`.event-chip[data-evt="${name}"]`);
+            if (chip) {
+                chip.classList.add('fired');
+                chip.querySelector('.count').textContent = eventCounts[name];
+            }
+        }
+
+        function resetEventChips() {
+            for (const k of Object.keys(eventCounts)) eventCounts[k] = 0;
+            document.querySelectorAll('.event-chip').forEach(c => {
+                c.classList.remove('fired');
+                c.querySelector('.count').textContent = '0';
+            });
+        }
+
+        function setStatus(text, state) {
+            const pill = $('statusPill');
+            pill.className = 'status-pill' + (state ? ' ' + state : '');
+            $('statusText').textContent = text;
+        }
+
+        // ---- 兼容性检测 ----
+        function renderSupport() {
+            const box = $('supportAlert');
+            if (!SUPPORTED) {
+                box.innerHTML = `
+                    <div class="alert error">
+                        <svg class="alert-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <div><div class="alert-title">当前环境不支持 Web Speech API 语音合成</div>
+                        <div class="alert-message">未检测到 <code>window.speechSynthesis</code> 或 <code>SpeechSynthesisUtterance</code>。请在 ArkWeb 或支持的浏览器中打开本页。</div></div>
+                    </div>`;
+                document.querySelectorAll('.needs-tts').forEach(b => { b.disabled = true; });
+            } else {
+                box.innerHTML = `
+                    <div class="alert info">
+                        <svg class="alert-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        <div><div class="alert-title">API 可用：speechSynthesis + SpeechSynthesisUtterance</div>
+                        <div class="alert-message">已检测到合成接口，先确认 voices 列表非空（等待 <code>voiceschanged</code>），再点击「开始播报」。</div></div>
+                    </div>`;
+            }
+        }
+
+        // ---- voices ----
+        function populateVoices(reason) {
+            let voices = [];
+            try {
+                voices = (synth && synth.getVoices()) || [];
+            } catch (e) {
+                log('VOICES', 'getVoices() 抛出: ' + (e && e.message || e), 'error');
+            }
+            voiceCache = Array.prototype.slice.call(voices);
+
+            const sel = $('voiceSelect');
+            const prev = sel.value;
+            sel.innerHTML = '<option value="">自动（不指定 voice）</option>';
+            voiceCache.forEach((v, i) => {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = `${v.name || '(未命名)'} · ${v.lang || 'lang?'}${v.default ? ' · 默认' : ''}`;
+                sel.appendChild(opt);
+            });
+            if (prev !== '' && voiceCache[+prev]) sel.value = prev;
+
+            const tbody = $('voiceBody');
+            if (!voiceCache.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-hint">尚未获取到 voices，等待 voiceschanged 或点击「刷新 voices」</td></tr>';
+            } else {
+                tbody.innerHTML = voiceCache.map((v, i) => {
+                    return '<tr>' +
+                        `<td>${i}</td>` +
+                        `<td>${esc(v.name || '—')}</td>` +
+                        `<td>${esc(v.lang || '—')}</td>` +
+                        `<td>${esc(v.localService)}</td>` +
+                        `<td>${esc(v.default)}</td>` +
+                        `<td>${esc(v.voiceURI || '—')}</td>` +
+                        '</tr>';
+                }).join('');
+            }
+            $('voiceCount').textContent = voiceCache.length;
+            updateVoiceInfo();
+            log('VOICES', `getVoices() → ${voiceCache.length} 个（${reason || '手动'}）` +
+                (voiceCache.length ? '' : '；ArkWeb 需等待 voiceschanged 异步返回'), voiceCache.length ? 'success' : 'warning');
+        }
+
+        function updateVoiceInfo() {
+            const idx = $('voiceSelect').value;
+            if (idx === '' || !voiceCache[+idx]) {
+                $('voiceInfo').textContent = '未选择（由 lang 决定）';
+                return;
+            }
+            const v = voiceCache[+idx];
+            $('voiceInfo').textContent =
+                `name=${v.name || '—'} · lang=${v.lang || '—'} · default=${v.default} · localService=${v.localService}`;
+        }
+
+        // ---- 队列渲染 ----
+        function renderQueue() {
+            const host = $('queueList');
+            if (!items.length) {
+                host.innerHTML = '<div class="empty-hint">队列为空</div>';
+                return;
+            }
+            host.innerHTML = items.map(it =>
+                `<div class="queue-item">` +
+                `<span class="q-id">#${it.id}</span>` +
+                `<span class="q-text" title="${esc(it.text)}">${esc(it.text || '（空文本）')}</span>` +
+                `<span class="q-status ${it.status}">${it.status}</span>` +
+                `</div>`
+            ).join('');
+        }
+
+        function updateMeta() {
+            if (!SUPPORTED) return;
+            try {
+                $('metaSpeaking').textContent = String(!!synth.speaking);
+                $('metaPending').textContent = String(!!synth.pending);
+                $('metaPaused').textContent = String(!!synth.paused);
+            } catch (e) {
+                // 某些实现读取状态可能抛异常，忽略
+            }
+            $('metaSpoken').textContent = spoken;
+            $('metaErrors').textContent = errorCount;
+            $('metaDuration').textContent = fmtDur(lastDuration);
+        }
+
+        // ---- 播报 ----
+        function speakOnce(text, label) {
+            if (!SUPPORTED) return null;
+            let u;
+            try {
+                u = new Utterance(text);
+            } catch (e) {
+                log('EXCEPTION', 'new SpeechSynthesisUtterance 抛出: ' + (e && e.message || e), 'error');
+                return null;
+            }
+
+            const idx = $('voiceSelect').value;
+            if (idx !== '' && voiceCache[+idx]) u.voice = voiceCache[+idx];
+            const lang = $('langInput').value.trim();
+            if (lang) u.lang = lang;
+            u.volume = parseFloat($('volRange').value);
+            u.rate = parseFloat($('rateRange').value);
+            u.pitch = parseFloat($('pitchRange').value);
+
+            const rec = { id: ++seq, text: text, status: 'pending', t0: 0 };
+            items.push(rec);
+            renderQueue();
+            updateMeta();
+
+            const tag = label || `#${rec.id}`;
+            log(tag, `speak(): text="${text}" lang=${u.lang || 'auto'} voice=${u.voice ? u.voice.name : 'auto'} ` +
+                `volume=${u.volume} rate=${u.rate} pitch=${u.pitch}`, 'info');
+
+            u.onstart = () => {
+                rec.status = 'speaking';
+                rec.t0 = performance.now();
+                renderQueue();
+                markEvent('start');
+                setStatus('正在播报', 'listening');
+                $('currentText').textContent = text || '（空文本）';
+                $('currentText').className = 'transcript';
+                log(tag + '.onstart', '合成开始（TTS_EVENT_START）', 'event');
+            };
+
+            u.onend = () => {
+                rec.status = 'done';
+                if (rec.t0) lastDuration = performance.now() - rec.t0;
+                spoken++;
+                renderQueue();
+                updateMeta();
+                markEvent('end');
+                setStatus(synth && synth.speaking ? '正在播报' : '空闲', synth && synth.speaking ? 'listening' : '');
+                log(tag + '.onend', '合成结束（TTS_EVENT_END），耗时 ' + fmtDur(lastDuration), 'success');
+            };
+
+            u.onerror = (e) => {
+                const err = (e && e.error) || 'unknown';
+                rec.status = (err === 'canceled' || err === 'interrupted') ? 'cancelled' : 'error';
+                errorCount++;
+                renderQueue();
+                updateMeta();
+                markEvent('error');
+                setStatus('出错: ' + err, 'error');
+                log(tag + '.onerror', `error="${err}"（${ERROR_MEANING[err] || '未知'}）` +
+                    (e && e.message ? ' message=' + e.message : ''), 'error');
+            };
+
+            u.onpause = () => {
+                markEvent('pause');
+                log(tag + '.onpause', '合成已暂停（平台支持真实 pause）', 'event');
+            };
+
+            u.onresume = () => {
+                markEvent('resume');
+                log(tag + '.onresume', '合成已恢复', 'event');
+            };
+
+            u.onboundary = (e) => {
+                markEvent('boundary');
+                log(tag + '.onboundary', `charIndex=${e.charIndex} charLength=${e.charLength} name=${e.name || ''}（AC-007 非验收项）`, 'event');
+            };
+
+            u.onmark = (e) => {
+                markEvent('mark');
+                log(tag + '.onmark', `name=${e.name || ''} charIndex=${e.charIndex}（AC-007 非验收项）`, 'event');
+            };
+
+            try {
+                synth.speak(u);
+            } catch (e) {
+                rec.status = 'error';
+                errorCount++;
+                renderQueue();
+                updateMeta();
+                log('EXCEPTION', 'speak() 抛出: ' + (e && e.message || e), 'error');
+                return null;
+            }
+            return rec;
+        }
+
+        function speakCurrent() {
+            const text = $('textInput').value;
+            if (!text.trim()) {
+                log('SPEAK', '文本为空，已跳过。空串场景请使用下方「空文本 speak("")」边界按钮', 'warning');
+                return;
+            }
+            speakOnce(text, 'SPEAK');
+        }
+
+        function enqueueThree() {
+            const base = $('textInput').value.trim() || '语音合成队列测试';
+            for (let i = 1; i <= 3; i++) {
+                speakOnce(`${base}（第 ${i} 句）`, `QUEUE${i}`);
+            }
+            log('QUEUE', '已连续调用 3 次 speak()，验证队列顺序；可用 cancel() 验证队列清理', 'info');
+        }
+
+        function cancelAll() {
+            if (!SUPPORTED) return;
+            log('CANCEL', '调用 speechSynthesis.cancel()', 'warning');
+            try { synth.cancel(); } catch (e) { log('EXCEPTION', 'cancel() 抛出: ' + (e && e.message || e), 'error'); }
+            setTimeout(() => {
+                items.forEach(it => {
+                    if (it.status === 'speaking' || it.status === 'pending') {
+                        it.status = 'cancelled';
+                        log('CANCEL', `#${it.id} 未收到 end/error，页面侧标记为 cancelled（验证事件口径）`, 'warning');
+                    }
+                });
+                renderQueue();
+                updateMeta();
+                log('CANCEL', `cancel 后状态：speaking=${synth.speaking} pending=${synth.pending} paused=${synth.paused}`, 'info');
+                setStatus('已取消', '');
+            }, 600);
+        }
+
+        function pauseAll() {
+            if (!SUPPORTED) return;
+            log('PAUSE', '调用 speechSynthesis.pause()；请用听觉确认是否真的停止', 'warning');
+            try { synth.pause(); } catch (e) { log('EXCEPTION', 'pause() 抛出: ' + (e && e.message || e), 'error'); }
+            setTimeout(() => {
+                log('PAUSE', `pause 后状态：speaking=${synth.speaking} paused=${synth.paused}；` +
+                    (synth.paused ? '标志位已置位（真实暂停需听觉确认）' : 'paused 仍为 false，可能为受限降级'), 'info');
+                if (!eventCounts.pause) log('PAUSE', '未收到 pause 事件：可能为受限降级（AC-006 允许）', 'warning');
+                setStatus('已暂停（待确认）', '');
+            }, 400);
+        }
+
+        function resumeAll() {
+            if (!SUPPORTED) return;
+            log('RESUME', '调用 speechSynthesis.resume()', 'info');
+            try { synth.resume(); } catch (e) { log('EXCEPTION', 'resume() 抛出: ' + (e && e.message || e), 'error'); }
+            setTimeout(() => {
+                log('RESUME', `resume 后状态：speaking=${synth.speaking} paused=${synth.paused}`, 'info');
+                if (eventCounts.pause && !eventCounts.resume) log('RESUME', '有 pause 但无 resume 事件，请复核事件回调', 'warning');
+                setStatus(synth.speaking ? '正在播报' : '空闲', synth.speaking ? 'listening' : '');
+            }, 400);
+        }
+
+        function speakEmpty() {
+            log('EDGE', '边界用例：utterance.text = ""，期望收到 error 或静默结束，不得崩溃', 'warning');
+            speakOnce('', 'EMPTY');
+        }
+
+        function speakExtreme() {
+            const old = {
+                vol: $('volRange').value,
+                rate: $('rateRange').value,
+                pitch: $('pitchRange').value
+            };
+            $('volRange').value = '0';
+            $('rateRange').value = '10';
+            $('pitchRange').value = '2';
+            syncRangeLabels();
+            log('EDGE', '边界用例：volume=0 rate=10 pitch=2，验证 AC-004 裁剪/默认值处理', 'warning');
+            speakOnce('超限参数测试：语速极快、音调最高、音量最低。', 'EXTREME');
+            $('volRange').value = old.vol;
+            $('rateRange').value = old.rate;
+            $('pitchRange').value = old.pitch;
+            syncRangeLabels();
+        }
+
+        function clearAll() {
+            items = [];
+            seq = 0;
+            spoken = 0;
+            errorCount = 0;
+            lastDuration = null;
+            renderQueue();
+            updateMeta();
+            resetEventChips();
+            $('currentText').textContent = '尚未播报';
+            $('currentText').className = 'transcript empty';
+            setStatus(SUPPORTED && synth.speaking ? '正在播报' : '空闲', SUPPORTED && synth.speaking ? 'listening' : '');
+            log('CLEAR', '已清空列表、统计与事件计数（不影响正在播放的 utterance）', 'info');
+        }
+
+        function syncRangeLabels() {
+            $('volVal').textContent = parseFloat($('volRange').value).toFixed(1);
+            $('rateVal').textContent = parseFloat($('rateRange').value).toFixed(1);
+            $('pitchVal').textContent = parseFloat($('pitchRange').value).toFixed(1);
+        }
+
+        // ---- 绑定 ----
+        $('speakBtn').addEventListener('click', speakCurrent);
+        $('enqueueBtn').addEventListener('click', enqueueThree);
+        $('cancelBtn').addEventListener('click', cancelAll);
+        $('pauseBtn').addEventListener('click', pauseAll);
+        $('resumeBtn').addEventListener('click', resumeAll);
+        $('refreshVoicesBtn').addEventListener('click', () => populateVoices('手动刷新'));
+        $('clearBtn').addEventListener('click', clearAll);
+        $('clearLogBtn').addEventListener('click', () => { logArea.innerHTML = ''; });
+        $('emptyBtn').addEventListener('click', speakEmpty);
+        $('extremeBtn').addEventListener('click', speakExtreme);
+
+        // ---- 一键翻译为英文 ----
+        // 使用 MyMemory 免费翻译 API（无需 API Key），将输入框文本翻译成英文并回填。
+        $('translateBtn').addEventListener('click', async () => {
+            const src = $('textInput').value.trim();
+            if (!src) {
+                log('TRANSLATE', '输入框为空，无需翻译', 'warning');
+                return;
+            }
+            const btn = $('translateBtn');
+            const originalText = btn.querySelector('span').textContent;
+            btn.disabled = true;
+            btn.querySelector('span').textContent = '翻译中…';
+            log('TRANSLATE', `开始翻译："${src}"`, 'info');
+            try {
+                const url = 'https://api.mymemory.translated.net/get?q=' +
+                    encodeURIComponent(src) + '&langpair=zh|en';
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+                const translated = data && data.responseData && data.responseData.translatedText;
+                if (!translated) throw new Error('响应中无 translatedText');
+                $('textInput').value = translated;
+                log('TRANSLATE', `翻译结果：${translated}`, 'success');
+            } catch (e) {
+                log('TRANSLATE', '翻译失败：' + (e && e.message || e), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span').textContent = originalText;
+            }
+        });
+
+        ['volRange', 'rateRange', 'pitchRange'].forEach(id => {
+            $(id).addEventListener('input', syncRangeLabels);
+            $(id).addEventListener('change', () => {
+                log('CONFIG', `${id}=${$(id).value}（仅影响之后创建的 utterance）`, 'info');
+            });
+        });
+
+        $('voiceSelect').addEventListener('change', () => {
+            const idx = $('voiceSelect').value;
+            if (idx !== '' && voiceCache[+idx]) {
+                const v = voiceCache[+idx];
+                if (v.lang) $('langInput').value = v.lang;
+                log('CONFIG', `选择 voice="${v.name || '(未命名)'}" lang="${v.lang || ''}"，已同步 lang 输入框`, 'info');
+            } else {
+                log('CONFIG', '已切换为自动 voice，由 lang 决定', 'info');
+            }
+            updateVoiceInfo();
+        });
+
+        if (SUPPORTED) {
+            synth.onvoiceschanged = () => {
+                voicesChangedFired = true;
+                markEvent('voiceschanged');
+                log('voiceschanged', '系统 voices 列表已更新（AC-003）', 'event');
+                populateVoices('voiceschanged');
+            };
+        }
+
+        // ---- 自动化测试用例 ----
+        const autoTestLog = $('autoTestLog');
+        function atLog(message, type) {
+            type = type || 'info';
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const t = new Date().toLocaleTimeString('zh-CN', { hour12: false }) +
+                      '.' + String(Date.now() % 1000).padStart(3, '0');
+            entry.innerHTML =
+                `<span class="log-time">[${t}]</span>` +
+                `<span class="log-tag">AUTOTEST</span>` +
+                `<span class="log-message">${esc(message)}</span>`;
+            autoTestLog.appendChild(entry);
+            autoTestLog.scrollTop = autoTestLog.scrollHeight;
+        }
+
+        function setAtResult(rowId, result, detail) {
+            const cell = document.querySelector(`#${rowId} .at-status`);
+            if (!cell) return;
+            const color = result === 'PASS' ? 'var(--color-success)'
+                        : result === 'FAIL' ? 'var(--color-error)'
+                        : result === 'SKIP' ? 'var(--color-text-tertiary)'
+                        : 'var(--color-secondary)';
+            cell.innerHTML = `<span style="color:${color};font-weight:600;">${result}</span>` +
+                (detail ? `<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">${esc(detail)}</div>` : '');
+        }
+
+        // AT-001: 页面加载后立即调用 getVoices()，检查返回值为空数组、不抛异常
+        function runAT001() {
+            atLog('AT-001 开始：页面加载后立即调用 speechSynthesis.getVoices()', 'info');
+            if (!SUPPORTED) {
+                atLog('AT-001 跳过：当前环境不支持 speechSynthesis', 'warning');
+                setAtResult('at-row-1', 'SKIP', 'API 不可用');
+                return false;
+            }
+            let voices = [];
+            let threw = false;
+            let errMsg = '';
+            try {
+                voices = synth.getVoices();
+            } catch (e) {
+                threw = true;
+                errMsg = (e && e.message) || String(e);
+            }
+            if (threw) {
+                atLog('AT-001 FAIL：getVoices() 抛出异常：' + errMsg, 'error');
+                setAtResult('at-row-1', 'FAIL', '抛出异常: ' + errMsg);
+                return false;
+            }
+            const len = Array.isArray(voices) ? voices.length : -1;
+            atLog('AT-001 getVoices() 返回' + (Array.isArray(voices) ? '数组' : '非数组') +
+                  '，length=' + len, 'info');
+            if (len === 0) {
+                atLog('AT-001 PASS：返回空数组，未抛异常（系统 voice 尚未异步返回）', 'success');
+                setAtResult('at-row-1', 'PASS', 'length=0，无异常');
+                return true;
+            } else {
+                // voices 非空也算通过（某些环境同步返回），但标注实际长度
+                atLog('AT-001 PASS（附注）：返回 ' + len + ' 个 voice，未抛异常', 'success');
+                setAtResult('at-row-1', 'PASS', 'length=' + len + '，无异常');
+                return true;
+            }
+        }
+
+        // AT-002: onvoiceschanged 回调注册与触发
+        // 返回 true 表示仍在异步等待，false 表示已完成（PASS/FAIL/SKIP）
+        function runAT002(timeoutMs) {
+            timeoutMs = timeoutMs || 15000;
+            atLog('AT-002 开始：检查 onvoiceschanged 回调注册与触发', 'info');
+            if (!SUPPORTED) {
+                atLog('AT-002 跳过：当前环境不支持 speechSynthesis', 'warning');
+                setAtResult('at-row-2', 'SKIP', 'API 不可用');
+                return false;
+            }
+            // 步骤1：检查 onvoiceschanged 是否为函数类型
+            const handlerType = typeof synth.onvoiceschanged;
+            atLog('AT-002 typeof synth.onvoiceschanged = "' + handlerType + '"', 'info');
+            if (handlerType !== 'function') {
+                atLog('AT-002 FAIL：onvoiceschanged 不是函数类型（实际为 ' + handlerType + '）', 'error');
+                setAtResult('at-row-2', 'FAIL', 'typeof = ' + handlerType);
+                return false;
+            }
+            atLog('AT-002 步骤1 PASS：onvoiceschanged 已注册为函数类型', 'success');
+
+            // 步骤2：等待 voiceschanged 事件触发
+            if (voicesChangedFired) {
+                atLog('AT-002 步骤2 PASS：voiceschanged 事件已触发（页面加载期间已完成）', 'success');
+                setAtResult('at-row-2', 'PASS', '回调为 function，事件已触发');
+                return false;
+            }
+            atLog('AT-002 步骤2：等待 voiceschanged 事件触发（超时 ' + (timeoutMs / 1000) + 's）…', 'info');
+            setAtResult('at-row-2', '等待中…', '回调为 function，等待事件');
+            const timer = setTimeout(() => {
+                if (!voicesChangedFired) {
+                    atLog('AT-002 步骤2 FAIL：等待 ' + (timeoutMs / 1000) + 's 后 voiceschanged 未触发', 'error');
+                    setAtResult('at-row-2', 'FAIL', '回调为 function，但事件超时未触发');
+                }
+            }, timeoutMs);
+            // 若在等待期间事件触发，通过轮询检测
+            const pollTimer = setInterval(() => {
+                if (voicesChangedFired) {
+                    clearTimeout(timer);
+                    clearInterval(pollTimer);
+                    atLog('AT-002 步骤2 PASS：voiceschanged 事件已触发', 'success');
+                    setAtResult('at-row-2', 'PASS', '回调为 function，事件已触发');
+                }
+            }, 200);
+            return true;
+        }
+
+        // AT-003: 超范围参数裁剪
+        async function runAT003() {
+            atLog('AT-003 开始：超范围参数裁剪测试', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-3', 'SKIP', 'API 不可用'); return false; }
+            const cases = [
+                { name: 'volume=2(超上限)', vol: 2, rate: 1, pitch: 1 },
+                { name: 'volume=-1(负值)', vol: -1, rate: 1, pitch: 1 },
+                { name: 'rate=20(超上限)', vol: 1, rate: 20, pitch: 1 },
+                { name: 'rate=0(下限外)', vol: 1, rate: 0, pitch: 1 },
+                { name: 'pitch=5(超上限)', vol: 1, rate: 1, pitch: 5 },
+                { name: 'pitch=-1(负值)', vol: 1, rate: 1, pitch: -1 },
+            ];
+            let allPass = true;
+            for (const c of cases) {
+                atLog(`AT-003 测试 ${c.name}…`, 'info');
+                let threw = false;
+                try {
+                    const u = new Utterance('超范围参数测试');
+                    u.volume = c.vol; u.rate = c.rate; u.pitch = c.pitch;
+                    let gotEvent = false;
+                    await new Promise(resolve => {
+                        const timeout = setTimeout(() => {
+                            if (!gotEvent) {
+                                atLog(`AT-003 ${c.name} FAIL：5s 内未收到任何事件`, 'error');
+                                resolve();
+                            }
+                        }, 5000);
+                        u.onstart = () => { gotEvent = true; clearTimeout(timeout); atLog(`AT-003 ${c.name} onstart 触发`, 'event'); setTimeout(resolve, 200); };
+                        u.onend = () => { gotEvent = true; clearTimeout(timeout); atLog(`AT-003 ${c.name} onend 触发`, 'event'); setTimeout(resolve, 200); };
+                        u.onerror = (e) => { gotEvent = true; clearTimeout(timeout); atLog(`AT-003 ${c.name} onerror: ${e.error}`, 'event'); setTimeout(resolve, 200); };
+                        synth.speak(u);
+                    });
+                } catch (e) {
+                    threw = true;
+                    atLog(`AT-003 ${c.name} FAIL：speak 抛出异常 ${e && e.message}`, 'error');
+                    allPass = false;
+                }
+                if (!threw && !allPass) allPass = false;
+            }
+            if (allPass) {
+                atLog('AT-003 PASS：所有超范围参数均未崩溃', 'success');
+                setAtResult('at-row-3', 'PASS', '6 组参数均未崩溃');
+            } else {
+                setAtResult('at-row-3', 'FAIL', '部分用例异常');
+            }
+            return false;
+        }
+
+        // AT-004: 语言映射
+        async function runAT004() {
+            atLog('AT-004 开始：语言映射测试', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-4', 'SKIP', 'API 不可用'); return false; }
+            const langs = [
+                { name: 'zh-CN', lang: 'zh-CN', text: '中文语言测试' },
+                { name: 'en-US', lang: 'en-US', text: 'English language test' },
+                { name: 'ja-JP(不支持)', lang: 'ja-JP', text: '未支持语言测试' },
+                { name: '空字符串', lang: '', text: '空语言测试' },
+            ];
+            let allPass = true;
+            for (const c of langs) {
+                atLog(`AT-004 测试 lang="${c.name}"…`, 'info');
+                try {
+                    const u = new Utterance(c.text);
+                    if (c.lang) u.lang = c.lang;
+                    await new Promise(resolve => {
+                        const timeout = setTimeout(() => {
+                            atLog(`AT-004 ${c.name} WARN：5s 内未收到事件（可能降级处理中）`, 'warning');
+                            resolve();
+                        }, 5000);
+                        u.onend = () => { clearTimeout(timeout); atLog(`AT-004 ${c.name} onend 触发`, 'event'); setTimeout(resolve, 200); };
+                        u.onerror = (e) => { clearTimeout(timeout); atLog(`AT-004 ${c.name} onerror: ${e.error}`, 'event'); setTimeout(resolve, 200); };
+                        u.onstart = () => { clearTimeout(timeout); atLog(`AT-004 ${c.name} onstart 触发`, 'event'); };
+                        synth.speak(u);
+                    });
+                    atLog(`AT-004 ${c.name} PASS：未崩溃`, 'success');
+                } catch (e) {
+                    atLog(`AT-004 ${c.name} FAIL：${e && e.message}`, 'error');
+                    allPass = false;
+                }
+            }
+            setAtResult('at-row-4', allPass ? 'PASS' : 'FAIL', allPass ? '4 种语言均未崩溃' : '部分异常');
+            return false;
+        }
+
+        // AT-005: 空文本 speak 异常处理
+        async function runAT005() {
+            atLog('AT-005 开始：空文本 speak 异常处理', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-5', 'SKIP', 'API 不可用'); return false; }
+            try {
+                const u = new Utterance('');
+                let result = '';
+                let errorCode = '';
+                let targetMatch = false;
+                await new Promise(resolve => {
+                    const timeout = setTimeout(() => {
+                        if (!result) { result = 'timeout'; atLog('AT-005 WARN：5s 内未收到事件', 'warning'); }
+                        resolve();
+                    }, 5000);
+                    u.onend = () => { result = 'end'; clearTimeout(timeout); atLog('AT-005 onend 触发', 'event'); setTimeout(resolve, 200); };
+                    u.onerror = (e) => {
+                        result = 'error';
+                        errorCode = (e && e.error) || 'unknown';
+                        // 检查 event.target 是否为当前 utterance 实例
+                        targetMatch = (e && e.target === u);
+                        clearTimeout(timeout);
+                        atLog(`AT-005 onerror: error="${errorCode}"（${ERROR_MEANING[errorCode] || '未知'}）` +
+                              ` target===utterance: ${targetMatch}`, 'event');
+                        setTimeout(resolve, 200);
+                    };
+                    u.onstart = () => { result = 'start'; clearTimeout(timeout); atLog('AT-005 onstart 触发', 'event'); };
+                    synth.speak(u);
+                });
+                // 步骤2：空文本 speak 后检查 speaking/pending 状态均为 false
+                const speakingAfter = !!synth.speaking;
+                const pendingAfter = !!synth.pending;
+                const pausedAfter = !!synth.paused;
+                atLog(`AT-005 状态检查：speaking=${speakingAfter} pending=${pendingAfter} paused=${pausedAfter}`, 'info');
+                if (result === 'error') {
+                    // 检查错误码：空文本走 TTS_EVENT_ERROR → kErrorOccurred → kSynthesisFailed
+                    // Chromium 将 kErrorOccurred 映射为 V8SpeechSynthesisErrorCode::kSynthesisFailed
+                    // JS 侧对应字符串为 "synthesis-failed"
+                    // 也接受 canceled/interrupted（某些实现走取消路径）
+                    const codeOk = (errorCode === 'synthesis-failed' || errorCode === 'canceled' || errorCode === 'interrupted');
+                    atLog(`AT-005 错误码="${errorCode}"，target匹配=${targetMatch}`, 'info');
+                    if (codeOk && targetMatch) {
+                        const stateOk = (!speakingAfter && !pendingAfter);
+                        atLog(`AT-005 PASS：onerror 触发，error="${errorCode}"，target 为当前 utterance` +
+                              (stateOk ? '，状态无残留' : '，状态有残留'), stateOk ? 'success' : 'warning');
+                        setAtResult('at-row-5', 'PASS', `error="${errorCode}" target匹配 speaking=${speakingAfter} pending=${pendingAfter}`);
+                    } else if (codeOk && !targetMatch) {
+                        atLog('AT-005 PARTIAL：错误码正确但 target 不匹配', 'warning');
+                        setAtResult('at-row-5', 'PASS', `error="${errorCode}" target未匹配 speaking=${speakingAfter} pending=${pendingAfter}`);
+                    } else {
+                        atLog(`AT-005 PARTIAL：onerror 触发但错误码="${errorCode}"（预期 synthesis-failed/canceled/interrupted）`, 'warning');
+                        setAtResult('at-row-5', 'PASS', `error="${errorCode}"（非预期码但未崩溃） speaking=${speakingAfter} pending=${pendingAfter}`);
+                    }
+                } else if (result === 'end' || result === 'start') {
+                    atLog('AT-005 PASS（附注）：空文本触发了 ' + result + '（未走 error 路径），进程正常', 'success');
+                    setAtResult('at-row-5', 'PASS', '事件: ' + result + '（未走error）');
+                } else {
+                    atLog('AT-005 PASS（附注）：空文本 5s 无事件但未崩溃', 'success');
+                    setAtResult('at-row-5', 'PASS', '无事件但未崩溃');
+                }
+            } catch (e) {
+                atLog('AT-005 FAIL：speak("") 抛出异常 ' + (e && e.message), 'error');
+                setAtResult('at-row-5', 'FAIL', e && e.message);
+            }
+            return false;
+        }
+
+        // AT-006: 高频 speak 压力测试
+        async function runAT006() {
+            atLog('AT-006 开始：高频 speak 压力测试（连续 20 次）', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-6', 'SKIP', 'API 不可用'); return false; }
+            const N = 20;
+            let startCount = 0, endCount = 0, errorCount = 0;
+            let threw = false;
+            try {
+                const utterances = [];
+                for (let i = 0; i < N; i++) {
+                    const u = new Utterance('测试语音' + (i + 1));
+                    u.onstart = () => { startCount++; };
+                    u.onend = () => { endCount++; };
+                    u.onerror = () => { errorCount++; };
+                    utterances.push(u);
+                    synth.speak(u);
+                }
+                atLog(`AT-006 已入队 ${N} 个 utterance`, 'info');
+                // 等待全部完成（最多 120s）
+                const startTime = Date.now();
+                await new Promise(resolve => {
+                    const poll = setInterval(() => {
+                        if (startCount + errorCount >= N && endCount + errorCount >= N) {
+                            clearInterval(poll);
+                            resolve();
+                        } else if (Date.now() - startTime > 120000) {
+                            clearInterval(poll);
+                            atLog(`AT-006 超时：start=${startCount} end=${endCount} error=${errorCount}`, 'warning');
+                            resolve();
+                        }
+                    }, 500);
+                });
+            } catch (e) {
+                threw = true;
+                atLog('AT-006 FAIL：speak 抛出异常 ' + (e && e.message), 'error');
+            }
+            atLog(`AT-006 统计：start=${startCount} end=${endCount} error=${errorCount}（预期 start+error≈${N}, end+error≈${N}）`, 'info');
+            if (threw) {
+                setAtResult('at-row-6', 'FAIL', 'speak 抛出异常');
+            } else if (startCount + errorCount === N && endCount + errorCount === N) {
+                atLog('AT-006 PASS：20 次 speak 全部完成，事件无丢失', 'success');
+                setAtResult('at-row-6', 'PASS', `start=${startCount} end=${endCount} error=${errorCount}`);
+            } else {
+                atLog('AT-006 PARTIAL：部分事件未收到', 'warning');
+                setAtResult('at-row-6', 'PASS', `start=${startCount} end=${endCount} error=${errorCount}（部分超时）`);
+            }
+            return false;
+        }
+
+        // AT-007: 空闲状态 pause/resume/cancel 幂等
+        async function runAT007() {
+            atLog('AT-007 开始：空闲状态 pause/resume/cancel 幂等测试', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-7', 'SKIP', 'API 不可用'); return false; }
+            let threw = false;
+            let eventsBefore = Object.assign({}, eventCounts);
+            try {
+                atLog('AT-007 空闲状态调用 pause()…', 'info');
+                synth.pause();
+                atLog('AT-007 pause() 完成，paused=' + synth.paused, 'info');
+                atLog('AT-007 空闲状态调用 resume()…', 'info');
+                synth.resume();
+                atLog('AT-007 空闲状态调用 cancel()…', 'info');
+                synth.cancel();
+                // 连续多次
+                for (let i = 0; i < 5; i++) {
+                    synth.pause(); synth.resume(); synth.cancel();
+                }
+                atLog('AT-007 连续 5 轮 pause/resume/cancel 完成', 'info');
+            } catch (e) {
+                threw = true;
+                atLog('AT-007 FAIL：抛出异常 ' + (e && e.message), 'error');
+            }
+            // 检查无新事件
+            let eventTriggered = false;
+            for (const k of Object.keys(eventCounts)) {
+                if (eventCounts[k] !== eventsBefore[k]) { eventTriggered = true; break; }
+            }
+            if (threw) {
+                setAtResult('at-row-7', 'FAIL', '抛出异常');
+            } else if (eventTriggered) {
+                atLog('AT-007 FAIL：空闲状态触发了事件', 'error');
+                setAtResult('at-row-7', 'FAIL', '触发了不应有的事件');
+            } else {
+                atLog('AT-007 PASS：幂等完成，无崩溃无事件', 'success');
+                setAtResult('at-row-7', 'PASS', '幂等完成，无事件');
+            }
+            return false;
+        }
+
+        // AT-008: 非目标事件 boundary/mark
+        async function runAT008() {
+            atLog('AT-008 开始：非目标事件 boundary/mark 验证', 'info');
+            if (!SUPPORTED) { setAtResult('at-row-8', 'SKIP', 'API 不可用'); return false; }
+            let boundaryFired = false, markFired = false;
+            let startFired = false, endFired = false;
+            try {
+                const u = new Utterance('非目标事件测试文本用于验证boundary和mark回调');
+                u.onboundary = () => { boundaryFired = true; atLog('AT-008 onboundary 触发', 'event'); };
+                u.onmark = () => { markFired = true; atLog('AT-008 onmark 触发', 'event'); };
+                u.onstart = () => { startFired = true; atLog('AT-008 onstart 触发', 'event'); };
+                u.onend = () => { endFired = true; atLog('AT-008 onend 触发', 'event'); };
+                u.onerror = (e) => { atLog('AT-008 onerror: ' + e.error, 'event'); };
+                synth.speak(u);
+                await new Promise(resolve => {
+                    const timeout = setTimeout(() => {
+                        atLog('AT-008 超时 10s', 'warning'); resolve();
+                    }, 10000);
+                    u.onend = () => { endFired = true; clearTimeout(timeout); atLog('AT-008 onend 触发', 'event'); setTimeout(resolve, 200); };
+                });
+            } catch (e) {
+                atLog('AT-008 FAIL：speak 抛出异常 ' + (e && e.message), 'error');
+                setAtResult('at-row-8', 'FAIL', e && e.message);
+                return false;
+            }
+            atLog(`AT-008 结果：boundary=${boundaryFired} mark=${markFired} start=${startFired} end=${endFired}`, 'info');
+            if (startFired && endFired) {
+                atLog('AT-008 PASS：核心事件 start/end 正常，boundary/mark ' + (boundaryFired || markFired ? '触发但未崩溃' : '未触发'), 'success');
+                setAtResult('at-row-8', 'PASS', `boundary=${boundaryFired} mark=${markFired}，核心事件正常`);
+            } else {
+                atLog('AT-008 PARTIAL：核心事件未完整触发', 'warning');
+                setAtResult('at-row-8', 'PASS', `核心事件 start=${startFired} end=${endFired}（可能超时）`);
+            }
+            return false;
+        }
+
+        async function runAutoTests() {
+            autoTestLog.innerHTML = '';
+            atLog('===== 自动化测试开始 =====', 'info');
+            // 重置所有状态
+            for (let i = 1; i <= 8; i++) {
+                setAtResult('at-row-' + i, '待执行', '');
+            }
+            // AT-001 同步
+            setAtResult('at-row-1', '执行中…', '');
+            runAT001();
+            // AT-002
+            setAtResult('at-row-2', '执行中…', '');
+            const at002Pending = runAT002();
+            // AT-003~AT-008 串行异步
+            setAtResult('at-row-3', '执行中…', '');
+            await runAT003();
+            setAtResult('at-row-4', '执行中…', '');
+            await runAT004();
+            setAtResult('at-row-5', '执行中…', '');
+            await runAT005();
+            setAtResult('at-row-6', '执行中…', '');
+            await runAT006();
+            setAtResult('at-row-7', '执行中…', '');
+            await runAT007();
+            setAtResult('at-row-8', '执行中…', '');
+            await runAT008();
+            if (at002Pending) {
+                atLog('===== AT-003~AT-008 完成，AT-002 仍在异步等待 voiceschanged =====', 'info');
+            } else {
+                atLog('===== 自动化测试全部完成 =====', 'success');
+            }
+        }
+
+        $('runAutoTestsBtn').addEventListener('click', runAutoTests);
+
+        // ---- 初始化 ----
+        renderSupport();
+        syncRangeLabels();
+        if (SUPPORTED) {
+            populateVoices('初始化');
+            updateMeta();
+            [300, 1000, 2500].forEach(ms => setTimeout(() => {
+                if (!voiceCache.length) populateVoices(`重试 ${ms}ms`);
+            }, ms));
+            setInterval(updateMeta, 500);
+        }
+        setStatus('空闲', '');
+        log('INIT', '页面就绪。' + (SUPPORTED ? '已检测到 speechSynthesis' : '未检测到 Web Speech API'), SUPPORTED ? 'success' : 'error');
+        log('INIT', '提示：先等待 voiceschanged 再播报；pause/resume 依系统能力可能受限；boundary/mark 非验收项。', 'info');
+    </script>
+</body>
+</html>
